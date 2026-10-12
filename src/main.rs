@@ -351,7 +351,7 @@ impl Framewell {
             painter.rect_stroke(
                 r.expand(5.),
                 2,
-                Stroke::new(1.5, Color32::from_rgb(37, 117, 180)),
+                Stroke::new(1.5_f32, Color32::from_rgb(37, 117, 180)),
                 StrokeKind::Outside,
             );
         }
