@@ -15,7 +15,7 @@ User-approved scope, 12 October 2026: capture, annotation, visual guides and AI 
 
 Snagit 2026.4.2 (build 2026.108) is installed and open in the macOS VM. Observed: image/video-specific editor controls; labeled annotation tools; independent Quick Styles and Tool Properties; recent-image strip; library; capture popover with image/video/all-in-one, cursor, delay, clipboard and editor toggles; Create menu with Image from Template and Video from Images. These observations inform functional requirements, not copied code or assets.
 
-REA verified native ARM64 identity and Info.plist metadata. Its Mach-O inspection reported Apple imaging/text/media frameworks and separate vendor storage, recorder, AI and sharing dependencies. Dependency names establish linkage, not how those features execute. The initial deep-analysis calls were unavailable because no engine was configured. Engine installation and a focused native investigation are ongoing separately. Proprietary binary files and decompiled output are excluded from this public source repository.
+REA verified native ARM64 identity and Info.plist metadata. Its Mach-O inspection reported Apple imaging/text/media frameworks and separate vendor storage, recorder, AI and sharing dependencies. Dependency names establish linkage, not how those features execute. The initial deep-analysis calls were unavailable because no engine was configured. Ghidra installation and native indexing subsequently succeeded; the verification report records coverage. Proprietary binary files and decompiled output are excluded from this public source repository.
 
 ## Initial acceptance gates
 
