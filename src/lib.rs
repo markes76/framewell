@@ -337,7 +337,7 @@ pub fn render(source: &RgbaImage, objects: &[Object]) -> RgbaImage {
                 let (x, y, w, h) = region(o, &img);
                 if w > 0 && h > 0 {
                     let crop = image::imageops::crop_imm(&img, x, y, w, h).to_image();
-                    let blur = image::imageops::blur(&crop, 10.);
+                    let blur = image::imageops::blur(&crop, o.width.clamp(1., 48.));
                     image::imageops::overlay(&mut img, &blur, x as i64, y as i64);
                 }
             }
@@ -358,19 +358,56 @@ pub fn render(source: &RgbaImage, objects: &[Object]) -> RgbaImage {
                 } else {
                     Rgba([255, 255, 255, 255])
                 };
-                draw_text_mut(
-                    &mut img,
-                    text_color,
-                    x as i32 + 8,
-                    y as i32 + 6,
-                    if o.tool == Tool::Step {
-                        25.
-                    } else {
-                        o.width.max(14.)
-                    },
-                    &font(),
-                    &o.text,
-                );
+                let size = if o.tool == Tool::Step {
+                    25.
+                } else {
+                    o.width.max(14.)
+                };
+                let f = font();
+                if o.tool == Tool::Step {
+                    let (tw, th) = text_size(size, &f, &o.text);
+                    draw_text_mut(
+                        &mut img,
+                        text_color,
+                        x as i32 + 20 - tw as i32 / 2,
+                        y as i32 + 20 - th as i32 / 2,
+                        size,
+                        &f,
+                        &o.text,
+                    );
+                } else {
+                    let (rx, ry, rw, rh) = region(o, &img);
+                    if rw > 16 && rh > 12 {
+                        let mut patch = RgbaImage::new(rw, rh);
+                        let mut row = String::new();
+                        let mut ty = 6_i32;
+                        for paragraph in o.text.split('\n') {
+                            for word in paragraph.split_whitespace() {
+                                let candidate = if row.is_empty() {
+                                    word.to_owned()
+                                } else {
+                                    format!("{row} {word}")
+                                };
+                                if text_size(size, &f, &candidate).0 > rw - 16 && !row.is_empty() {
+                                    draw_text_mut(&mut patch, text_color, 8, ty, size, &f, &row);
+                                    ty += (size * 1.25) as i32;
+                                    row.clear();
+                                }
+                                if !row.is_empty() {
+                                    row.push(' ');
+                                }
+                                row.push_str(word);
+                            }
+                            draw_text_mut(&mut patch, text_color, 8, ty, size, &f, &row);
+                            ty += (size * 1.25) as i32;
+                            row.clear();
+                            if ty >= rh as i32 {
+                                break;
+                            }
+                        }
+                        image::imageops::overlay(&mut img, &patch, i64::from(rx), i64::from(ry));
+                    }
+                }
             }
             _ => {}
         }
@@ -379,73 +416,92 @@ pub fn render(source: &RgbaImage, objects: &[Object]) -> RgbaImage {
     img
 }
 pub fn sample() -> RgbaImage {
-    let mut img = RgbaImage::from_pixel(1080, 680, Rgba([246, 248, 249, 255]));
+    // Original synthetic software screen: a practical subject for annotations.
+    let mut img = RgbaImage::from_pixel(1080, 680, Rgba([245, 247, 250, 255]));
     let f = font();
+    fn block(img: &mut RgbaImage, x: i32, y: i32, w: u32, h: u32, c: [u8; 4]) {
+        draw_filled_rect_mut(img, imageproc::rect::Rect::at(x, y).of_size(w, h), Rgba(c));
+    }
+    let ink = Rgba([37, 44, 52, 255]);
+    let muted = Rgba([85, 96, 107, 255]);
+    block(&mut img, 0, 0, 1080, 62, [255, 255, 255, 255]);
+    draw_text_mut(&mut img, ink, 28, 20, 25., &f, "Team workspace");
     draw_text_mut(
         &mut img,
-        Rgba([29, 55, 65, 255]),
-        54,
-        42,
-        38.,
+        muted,
+        775,
+        24,
+        17.,
         &f,
-        "A clearer way to explain your work",
+        "Example software / synthetic data",
     );
+    block(&mut img, 0, 62, 200, 618, [233, 238, 243, 255]);
+    for (i, title) in ["Overview", "Projects", "Shared files", "People", "Settings"]
+        .iter()
+        .enumerate()
+    {
+        let y = 104 + i as i32 * 54;
+        if i == 1 {
+            block(&mut img, 16, y - 9, 168, 42, [215, 234, 234, 255]);
+        }
+        draw_text_mut(&mut img, ink, 32, y, 20., &f, title);
+    }
+    draw_text_mut(&mut img, ink, 238, 98, 34., &f, "Projects");
     draw_text_mut(
         &mut img,
-        Rgba([91, 107, 113, 255]),
-        56,
-        103,
+        muted,
+        238,
+        147,
+        18.,
+        &f,
+        "Keep the team aligned and share what happens next.",
+    );
+    block(&mut img, 872, 96, 165, 43, [27, 105, 111, 255]);
+    draw_text_mut(
+        &mut img,
+        Rgba([255, 255, 255, 255]),
+        892,
+        107,
         20.,
         &f,
-        "Framewell demo workspace - synthetic content",
+        "New project",
     );
-    for (i, (title, body, button)) in [
-        ("Capture", "Choose a region or a window", "Capture screen"),
-        ("Annotate", "Add editable explanations", "Add a callout"),
-        ("Share", "Build a visual guide", "Export guide"),
+    block(&mut img, 238, 195, 800, 42, [255, 255, 255, 255]);
+    draw_text_mut(&mut img, muted, 254, 208, 18., &f, "Search projects...");
+    block(&mut img, 238, 262, 800, 328, [255, 255, 255, 255]);
+    for (x, title) in [
+        (256, "Project"),
+        (646, "Owner"),
+        (820, "Status"),
+        (958, "Updated"),
+    ] {
+        draw_text_mut(&mut img, muted, x, 278, 17., &f, title);
+    }
+    for (i, (title, owner, status)) in [
+        ("New colleague onboarding", "Alex", "In progress"),
+        ("Software setup guide", "Sam", "In review"),
+        ("Quarterly planning", "Jordan", "In progress"),
+        ("Knowledge library", "Taylor", "Complete"),
     ]
     .iter()
     .enumerate()
     {
-        let x = 54 + i as i32 * 326;
-        draw_filled_rect_mut(
-            &mut img,
-            imageproc::rect::Rect::at(x, 190).of_size(296, 340),
-            Rgba([255, 255, 255, 255]),
-        );
-        draw_text_mut(
-            &mut img,
-            Rgba([29, 55, 65, 255]),
-            x + 24,
-            223,
-            30.,
-            &f,
-            title,
-        );
-        draw_text_mut(
-            &mut img,
-            Rgba([91, 107, 113, 255]),
-            x + 24,
-            283,
-            17.,
-            &f,
-            body,
-        );
-        draw_filled_rect_mut(
-            &mut img,
-            imageproc::rect::Rect::at(x + 24, 435).of_size(248, 50),
-            Rgba([32, 110, 108, 255]),
-        );
-        draw_text_mut(
-            &mut img,
-            Rgba([255, 255, 255, 255]),
-            x + 40,
-            447,
-            21.,
-            &f,
-            button,
-        );
+        let y = 330 + i as i32 * 63;
+        block(&mut img, 254, y - 12, 766, 1, [230, 235, 239, 255]);
+        draw_text_mut(&mut img, ink, 256, y, 20., &f, title);
+        draw_text_mut(&mut img, muted, 646, y, 18., &f, owner);
+        draw_text_mut(&mut img, Rgba([27, 105, 111, 255]), 820, y, 17., &f, status);
+        draw_text_mut(&mut img, muted, 958, y, 17., &f, "Today");
     }
+    draw_text_mut(
+        &mut img,
+        muted,
+        238,
+        619,
+        17.,
+        &f,
+        "Practice: point out New project, highlight a row, then add this image to a guide.",
+    );
     img
 }
 pub fn escape(s: &str) -> String {

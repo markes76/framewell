@@ -1,4 +1,7 @@
+mod guide;
 mod platform;
+mod widgets;
+mod workspace;
 use eframe::egui::{self, *};
 use framewell::*;
 use std::{
@@ -6,6 +9,7 @@ use std::{
     sync::mpsc::{self, Receiver},
     time::Duration,
 };
+use widgets::*;
 struct Framewell {
     editor: Editor,
     tool: Tool,
@@ -18,7 +22,18 @@ struct Framewell {
     texture: Option<TextureHandle>,
     dirty: bool,
     status: String,
-    library: Vec<PathBuf>,
+    library: Vec<LibraryItem>,
+    library_page: usize,
+    workspace: Workspace,
+    inspector: Inspector,
+    project_path: Option<PathBuf>,
+    modified: bool,
+    pending_open: Option<PendingAction>,
+    current_thumb: Option<TextureHandle>,
+    thumb_revision: u64,
+    guide_textures: Vec<TextureHandle>,
+    guide_modified: bool,
+    allow_close: bool,
     root: PathBuf,
     search: String,
     steps: Vec<(String, image::RgbaImage)>,
@@ -29,22 +44,77 @@ struct Framewell {
     zoom: f32,
     style_editing: bool,
 }
+#[derive(Clone, Copy, PartialEq)]
+enum Workspace {
+    Editor,
+    Library,
+    Guide,
+}
+#[derive(Clone, Copy, PartialEq)]
+enum Inspector {
+    Properties,
+    Layers,
+    AI,
+}
+#[derive(Clone)]
+enum PendingAction {
+    Open(PathBuf),
+    Import,
+    Capture,
+    Quit,
+}
+struct LibraryItem {
+    path: PathBuf,
+    title: String,
+    texture: Option<TextureHandle>,
+}
 enum Job {
     Capture(std::result::Result<PathBuf, String>),
     AI(u64, std::result::Result<String, String>),
 }
 impl Framewell {
     fn new(cc: &eframe::CreationContext<'_>) -> Self {
+        cc.egui_ctx.set_theme(ThemePreference::Light);
         cc.egui_ctx.set_visuals(Visuals::light());
+        // Use the installed platform font; Apple font files are never bundled.
+        if let Ok(bytes) = std::fs::read("/System/Library/Fonts/SFNS.ttf") {
+            let mut fonts = FontDefinitions::default();
+            fonts
+                .font_data
+                .insert("macOS UI".into(), FontData::from_owned(bytes).into());
+            fonts
+                .families
+                .entry(FontFamily::Proportional)
+                .or_default()
+                .insert(0, "macOS UI".into());
+            cc.egui_ctx.set_fonts(fonts);
+        }
         let mut style = (*cc.egui_ctx.style()).clone();
-        style.spacing.item_spacing = vec2(10., 9.);
+        style.spacing.item_spacing = vec2(8., 8.);
+        style
+            .text_styles
+            .insert(TextStyle::Body, FontId::proportional(14.));
+        style
+            .text_styles
+            .insert(TextStyle::Button, FontId::proportional(14.));
+        style
+            .text_styles
+            .insert(TextStyle::Small, FontId::proportional(12.));
+        style.visuals.override_text_color = Some(INK);
+        style.visuals.panel_fill = Color32::from_rgb(249, 250, 251);
+        style.visuals.widgets.inactive.bg_fill = Color32::WHITE;
+        style.visuals.widgets.inactive.bg_stroke = Stroke::new(1., BORDER);
+        style.visuals.widgets.hovered.bg_fill = TINT;
+        style.visuals.widgets.active.bg_fill = TINT;
         style.spacing.button_padding = vec2(12., 8.);
         style.visuals.selection.bg_fill = Color32::from_rgb(32, 110, 108);
         cc.egui_ctx.set_style(style);
         let home = std::env::var_os("HOME")
             .map(PathBuf::from)
             .unwrap_or_else(std::env::temp_dir);
-        let root = if cfg!(target_os = "macos") {
+        let root = if let Some(path) = std::env::var_os("FRAMEWELL_LIBRARY_DIR") {
+            PathBuf::from(path)
+        } else if cfg!(target_os = "macos") {
             home.join("Library/Application Support/FramewellRust")
         } else {
             home.join(".local/share/framewell")
@@ -62,6 +132,17 @@ impl Framewell {
             dirty: true,
             status: "Ready · Synthetic demo loaded".into(),
             library: vec![],
+            library_page: 0,
+            workspace: Workspace::Editor,
+            inspector: Inspector::Properties,
+            project_path: None,
+            modified: false,
+            pending_open: None,
+            current_thumb: None,
+            thumb_revision: u64::MAX,
+            guide_textures: vec![],
+            guide_modified: false,
+            allow_close: false,
             root,
             search: String::new(),
             steps: vec![],
@@ -72,17 +153,29 @@ impl Framewell {
             zoom: 1.,
             style_editing: false,
         };
+        s.editor.state.document.title = "Example capture (synthetic)".into();
         s.refresh_library();
+        match guide::load(&s.root.join("guide")) {
+            Ok(steps) => s.steps = steps,
+            Err(e) if s.root.join("guide/guide.json").exists() => {
+                s.status = format!("Could not restore guide: {e}")
+            }
+            Err(_) => {}
+        }
         s
     }
     fn replace_editor(&mut self, mut editor: Editor) {
         editor.revision = self.editor.revision + 1;
         self.editor = editor;
         self.selected = None;
+        self.project_path = None;
+        self.zoom = 1.;
         self.changed();
+        self.modified = false;
     }
     fn refresh_library(&mut self) {
-        self.library = std::fs::read_dir(&self.root)
+        self.library_page = 0;
+        let mut paths: Vec<PathBuf> = std::fs::read_dir(&self.root)
             .map(|r| {
                 r.filter_map(|e| e.ok())
                     .map(|e| e.path())
@@ -90,16 +183,45 @@ impl Framewell {
                     .collect()
             })
             .unwrap_or_default();
-        self.library.sort();
+        paths.sort();
+        paths.reverse();
+        self.library = paths
+            .into_iter()
+            .filter_map(|path| {
+                let bytes = std::fs::read(path.join("document.json")).ok()?;
+                if bytes.len() > 8_000_000 {
+                    return None;
+                }
+                let json: serde_json::Value = serde_json::from_slice(&bytes).ok()?;
+                let title = json
+                    .get("document")
+                    .and_then(|d| d.get("title"))
+                    .or_else(|| json.get("title"))
+                    .and_then(|t| t.as_str())
+                    .unwrap_or("Untitled capture")
+                    .to_owned();
+                Some(LibraryItem {
+                    path,
+                    title,
+                    texture: None,
+                })
+            })
+            .collect();
     }
     fn changed(&mut self) {
         self.dirty = true;
+        self.modified = true;
         self.proposal = None;
     }
     fn save(&mut self) {
-        let path = self.root.join(format!("capture-{}", nonce()));
+        let path = self
+            .project_path
+            .clone()
+            .unwrap_or_else(|| self.root.join(format!("capture-{}", nonce())));
         match self.editor.save(&path) {
             Ok(()) => {
+                self.project_path = Some(path);
+                self.modified = false;
                 self.status = "Saved to your local library".into();
                 self.refresh_library();
             }
@@ -174,6 +296,8 @@ impl Framewell {
                             self.replace_editor(Editor::new(img));
                             self.selected = None;
                             self.changed();
+                            self.workspace = Workspace::Editor;
+                            self.editor.state.document.title = "New capture".into();
                             self.status = "Captured · Add explanations, then save or export".into();
                         }
                         Err(e) => self.status = e.to_string(),
@@ -223,7 +347,7 @@ impl Framewell {
             b: a,
             color: self.color.to_array(),
             width: if matches!(self.tool, Tool::Text | Tool::Callout) {
-                24.
+                self.width.max(24.)
             } else {
                 self.width
             },
@@ -262,7 +386,7 @@ impl Framewell {
         let rect = Rect::from_center_size(area.center(), size);
         let response = ui.interact(rect, ui.id().with("canvas"), Sense::click_and_drag());
         let painter = ui.painter_at(area);
-        painter.rect_filled(area, 0, Color32::from_rgb(233, 238, 239));
+        painter.rect_filled(area, 0, CANVAS);
         painter.rect_filled(rect.expand(2.), 2, Color32::WHITE);
         painter.image(
             self.texture.as_ref().unwrap().id(),
@@ -287,6 +411,9 @@ impl Framewell {
                 .iter()
                 .rposition(|o| o.hit(p));
         }
+        if response.clicked() && self.tool == Tool::Select {
+            self.sync_selection();
+        }
         if response.drag_started()
             && let Some(p) = response.interact_pointer_pos()
         {
@@ -300,6 +427,7 @@ impl Framewell {
                     .iter()
                     .rposition(|o| o.hit(p));
                 if let Some(i) = self.selected {
+                    self.sync_selection();
                     self.editor.checkpoint();
                     self.drag_origin = Some(self.editor.state.document.objects[i].clone());
                 }
@@ -360,195 +488,129 @@ impl Framewell {
 impl eframe::App for Framewell {
     fn update(&mut self, ctx: &Context, _: &mut eframe::Frame) {
         self.jobs(ctx);
-        if ctx.input(|i| i.modifiers.command && i.key_pressed(Key::Z)) {
-            self.editor.undo();
+        ctx.style_mut(|style| {
+            style.visuals.override_text_color = Some(INK);
+            style.visuals.weak_text_color = Some(MUTED);
+            style.visuals.selection = egui::style::Selection {
+                bg_fill: TINT,
+                stroke: Stroke::new(1., ACCENT),
+            };
+            style.visuals.widgets.inactive.fg_stroke = Stroke::new(1., INK);
+            style.visuals.widgets.hovered.fg_stroke = Stroke::new(1., INK);
+            style.visuals.widgets.active.fg_stroke = Stroke::new(1., ACCENT);
+        });
+        if ctx.input(|i| i.viewport().close_requested())
+            && !self.allow_close
+            && (self.modified || self.guide_modified)
+        {
+            ctx.send_viewport_cmd(ViewportCommand::CancelClose);
+            self.pending_open = Some(PendingAction::Quit);
+        }
+        self.load_thumbnails(ctx);
+        if !ctx.wants_keyboard_input()
+            && ctx.input(|i| i.modifiers.command && i.key_pressed(Key::Z))
+        {
+            if ctx.input(|i| i.modifiers.shift) {
+                self.editor.redo();
+            } else {
+                self.editor.undo();
+            }
             self.selected = None;
             self.changed();
         }
         if ctx.input(|i| i.modifiers.command && i.key_pressed(Key::S)) {
-            self.save();
+            if self.workspace == Workspace::Guide {
+                self.save_guide();
+            } else {
+                self.save();
+            }
         }
-        egui::TopBottomPanel::top("header").show(ctx, |ui| {
-            ui.add_space(7.);
-            ui.horizontal(|ui| {
-                ui.heading(RichText::new("Framewell").color(Color32::from_rgb(29, 55, 65)));
-                ui.label(
-                    RichText::new("RUST / EARLY BUILD")
-                        .small()
-                        .color(Color32::GRAY),
-                );
-                ui.separator();
-                ComboBox::from_id_salt("capture")
-                    .selected_text(&self.capture_mode)
-                    .show_ui(ui, |ui| {
-                        for mode in ["Region", "Window", "Display"] {
-                            ui.selectable_value(&mut self.capture_mode, mode.into(), mode);
-                        }
-                    });
-                if ui
-                    .add_enabled(
-                        self.job.is_none(),
-                        Button::new("Capture").fill(Color32::from_rgb(205, 234, 229)),
-                    )
-                    .clicked()
-                {
-                    self.start_capture(ctx);
-                }
-                if ui.button("Import image").clicked() {
-                    self.import();
-                }
-                if ui.button("Save project").clicked() {
-                    self.save();
-                }
-                if ui.button("Export PNG").clicked()
-                    && let Some(p) = rfd::FileDialog::new()
-                        .add_filter("PNG", &["png"])
-                        .set_file_name("framewell.png")
-                        .save_file()
-                {
-                    match self.editor.render().save(p) {
-                        Ok(()) => self.status = "PNG exported with opaque redactions".into(),
-                        Err(e) => self.status = e.to_string(),
-                    }
-                }
-            });
-            ui.separator();
-            ui.horizontal_wrapped(|ui| {
-                for tool in Tool::ALL {
-                    if ui
-                        .selectable_label(self.tool == tool, format!("{tool:?}"))
-                        .clicked()
-                    {
-                        self.tool = tool;
-                    }
-                }
-                ui.separator();
-                if ui.button("Undo").clicked() {
-                    self.editor.undo();
-                    self.selected = None;
-                    self.changed();
-                }
-                if ui.button("Redo").clicked() {
-                    self.editor.redo();
-                    self.selected = None;
-                    self.changed();
-                }
-            });
-            ui.add_space(5.);
-        });
-        egui::TopBottomPanel::bottom("status").show(ctx, |ui| {
-            ui.horizontal(|ui| {
-                ui.label(&self.status);
-                ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
-                    ui.label(format!(
-                        "{} × {}",
-                        self.editor.state.pixels.width(),
-                        self.editor.state.pixels.height()
-                    ));
-                    ui.add(Slider::new(&mut self.zoom, 0.5..=2.).text("Zoom"));
-                });
-            });
-        });
-        egui::SidePanel::left("library")
-            .default_width(180.)
-            .resizable(true)
-            .show(ctx, |ui| {
-                ui.add_space(14.);
-                ui.heading("Library");
-                ui.label(
-                    RichText::new("Saved on this computer")
-                        .small()
-                        .color(Color32::GRAY),
-                );
-                ui.text_edit_singleline(&mut self.search);
-                ui.add_space(12.);
-                if ui.button("Synthetic demo").clicked() {
-                    self.replace_editor(Editor::new(sample()));
-                    self.selected = None;
-                    self.changed();
-                }
-                ScrollArea::vertical().show(ui, |ui| {
-                    for p in self.library.clone() {
-                        let name = p.file_name().unwrap_or_default().to_string_lossy();
-                        if !name.to_lowercase().contains(&self.search.to_lowercase()) {
-                            continue;
-                        }
-                        if ui.button(name.as_ref()).clicked() {
-                            match Editor::open(&p) {
-                                Ok(e) => {
-                                    self.replace_editor(e);
-                                    self.selected = None;
-                                    self.changed();
-                                    self.status = "Saved project opened".into();
+        if !ctx.wants_keyboard_input() {
+            if ctx.input(|i| i.key_pressed(Key::Escape)) {
+                self.selected = None;
+                self.tool = Tool::Select;
+            }
+            if ctx.input(|i| i.key_pressed(Key::Delete) || i.key_pressed(Key::Backspace)) {
+                self.delete_selected();
+            }
+        }
+        self.header(ctx);
+        if self.workspace == Workspace::Editor {
+            self.tool_bar(ctx);
+        }
+        self.footer(ctx);
+        if self.workspace == Workspace::Editor {
+            self.filmstrip(ctx);
+            self.properties(ctx);
+            CentralPanel::default()
+                .frame(egui::Frame::NONE.fill(CANVAS))
+                .show(ctx, |ui| {
+                    egui::Frame::NONE
+                        .fill(Color32::from_rgb(246, 248, 250))
+                        .inner_margin(Margin::symmetric(18, 9))
+                        .show(ui, |ui| {
+                            ui.horizontal(|ui| {
+                                let r = ui.add(
+                                    TextEdit::singleline(&mut self.editor.state.document.title)
+                                        .desired_width(300.)
+                                        .frame(false),
+                                );
+                                if r.changed() {
+                                    self.editor.revision += 1;
+                                    self.modified = true;
                                 }
-                                Err(e) => self.status = e.to_string(),
+                                if self.modified {
+                                    ui.label(RichText::new("Unsaved").small().color(MUTED));
+                                }
+                            });
+                        });
+                    self.canvas(ui);
+                });
+        } else {
+            CentralPanel::default()
+                .frame(
+                    egui::Frame::NONE
+                        .fill(Color32::from_rgb(243, 246, 248))
+                        .inner_margin(24),
+                )
+                .show(ctx, |ui| {
+                    if self.workspace == Workspace::Library {
+                        self.library_view(ui);
+                    } else {
+                        self.guide_view(ui);
+                    }
+                });
+        }
+        if let Some(action) = self.pending_open.clone() {
+            egui::Window::new("Save your changes?")
+                .collapsible(false)
+                .resizable(false)
+                .anchor(Align2::CENTER_CENTER, Vec2::ZERO)
+                .show(ctx, |ui| {
+                    ui.label("You have changes that have not been saved.");
+                    ui.horizontal(|ui| {
+                        if ui.button("Save and continue").clicked() {
+                            if self.modified {
+                                self.save();
+                            }
+                            if self.guide_modified {
+                                self.save_guide();
+                            }
+                            if !self.modified && !self.guide_modified {
+                                self.perform_action(action.clone(), ctx);
+                                self.pending_open = None;
                             }
                         }
-                    }
+                        if ui.button("Discard and continue").clicked() {
+                            self.perform_action(action, ctx);
+                            self.pending_open = None;
+                        }
+                        if ui.button("Cancel").clicked() {
+                            self.pending_open = None;
+                        }
+                    });
                 });
-                ui.separator();
-                ui.heading("Guide");
-                ui.label(format!("{} steps", self.steps.len()));
-                if ui.button("Add current image").clicked() {
-                    self.steps.push((
-                        self.editor.state.document.caption.clone(),
-                        self.editor.render(),
-                    ));
-                    self.status = "Added to guide".into();
-                }
-                if ui
-                    .add_enabled(!self.steps.is_empty(), Button::new("Export HTML guide"))
-                    .clicked()
-                    && let Some(p) = rfd::FileDialog::new().pick_folder()
-                {
-                    match export_guide(&self.steps, &p.join(format!("framewell-guide-{}", nonce())))
-                    {
-                        Ok(()) => self.status = "Guide exported with images".into(),
-                        Err(e) => self.status = e.to_string(),
-                    }
-                }
-                for (i, (caption, _)) in self.steps.iter_mut().enumerate() {
-                    ui.label(format!("Step {}", i + 1));
-                    ui.text_edit_multiline(caption);
-                }
-            });
-        egui::SidePanel::right("properties").default_width(260.).resizable(true).show(ctx, |ui| {
-            ui.add_space(14.); ui.heading("Style");
-            let mut style_changed = false;
-            ui.horizontal(|ui| { ui.label("Color"); style_changed |= ui.color_edit_button_srgba(&mut self.color).changed(); });
-            style_changed |= ui.add(Slider::new(&mut self.width, 1.0..=36.).text("Stroke / text size")).changed();
-            ui.label("Text / callout"); style_changed |= ui.text_edit_multiline(&mut self.text).changed();
-            if style_changed && let Some(i) = self.selected {
-                if !self.style_editing { self.editor.checkpoint(); self.style_editing = true; }
-                let item = &mut self.editor.state.document.objects[i];
-                item.color = self.color.to_array(); item.width = self.width;
-                if matches!(item.tool, Tool::Text | Tool::Callout) { item.text = self.text.clone(); }
-                self.changed();
-            }
-            if !ctx.input(|i| i.pointer.any_down()) && !style_changed { self.style_editing = false; }
-            if let Some(i) = self.selected && let Some(o) = self.editor.state.document.objects.get(i) {
-                ui.separator(); ui.label(format!("Selected {:?} · #{}", o.tool, o.id));
-                if ui.button("Delete layer").clicked() { self.editor.checkpoint(); self.editor.state.document.objects.remove(i); self.selected = None; self.changed(); }
-            }
-            ui.separator(); ui.heading("Layers");
-            for (i, o) in self.editor.state.document.objects.iter().enumerate().rev() {
-                if ui.selectable_label(self.selected == Some(i), format!("{:?} #{}", o.tool, o.id)).clicked() {
-                    self.selected = Some(i); self.text = o.text.clone(); self.color = Color32::from_rgba_unmultiplied(o.color[0], o.color[1], o.color[2], o.color[3]); self.width = o.width;
-                }
-            }
-            ui.separator(); ui.heading("AI explanation");
-            ui.label(RichText::new("Uses your Codex login. Sends the current rendered image when requested. Account limits apply.").small());
-            ui.text_edit_multiline(&mut self.focus);
-            if ui.add_enabled(self.job.is_none(), Button::new("Draft explanation")).clicked() { self.start_ai(); }
-            if self.job.is_some() { ui.spinner(); }
-            if let Some(proposal) = &mut self.proposal {
-                ui.text_edit_multiline(proposal);
-                if ui.button("Use as guide caption").clicked() { let p = proposal.clone(); self.editor.checkpoint(); self.editor.state.document.caption = p; self.proposal = None; self.status = "Caption applied. Undo restores the previous caption.".into(); }
-            }
-            ui.label("Guide caption");
-            if ui.text_edit_multiline(&mut self.editor.state.document.caption).changed() { self.editor.revision += 1; self.proposal = None; }
-        });
-        CentralPanel::default().show(ctx, |ui| self.canvas(ui));
+        }
     }
 }
 fn main() -> eframe::Result {
@@ -565,7 +627,7 @@ fn main() -> eframe::Result {
     let options = eframe::NativeOptions {
         viewport: ViewportBuilder::default()
             .with_inner_size([1380., 850.])
-            .with_min_inner_size([1000., 640.]),
+            .with_min_inner_size([1100., 700.]),
         ..Default::default()
     };
     eframe::run_native(

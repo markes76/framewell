@@ -1,0 +1,428 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-13T15:22:31.829943+00:00",
+  "title": "Design System: Framewell Rust",
+  "extensions": {
+    "colorMeta": {
+      "accent": {
+        "role": "primary",
+        "displayName": "Accent",
+        "tonalRamp": [
+          "oklch(15% 0.07270 202.65)",
+          "oklch(26% 0.07270 202.65)",
+          "oklch(38% 0.07270 202.65)",
+          "oklch(49% 0.07270 202.65)",
+          "oklch(61% 0.07270 202.65)",
+          "oklch(72% 0.07270 202.65)",
+          "oklch(84% 0.07270 202.65)",
+          "oklch(95% 0.07270 202.65)"
+        ],
+        "rampPurpose": "Synthesized preview ramp only; these tones are not runtime app tokens."
+      },
+      "selection-tint": {
+        "role": "primary",
+        "displayName": "Selection Tint",
+        "tonalRamp": [
+          "oklch(15% 0.01693 196.87)",
+          "oklch(26% 0.01693 196.87)",
+          "oklch(38% 0.01693 196.87)",
+          "oklch(49% 0.01693 196.87)",
+          "oklch(61% 0.01693 196.87)",
+          "oklch(72% 0.01693 196.87)",
+          "oklch(84% 0.01693 196.87)",
+          "oklch(95% 0.01693 196.87)"
+        ],
+        "rampPurpose": "Synthesized preview ramp only; these tones are not runtime app tokens."
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "tonalRamp": [
+          "oklch(15% 0.01767 251.89)",
+          "oklch(26% 0.01767 251.89)",
+          "oklch(38% 0.01767 251.89)",
+          "oklch(49% 0.01767 251.89)",
+          "oklch(61% 0.01767 251.89)",
+          "oklch(72% 0.01767 251.89)",
+          "oklch(84% 0.01767 251.89)",
+          "oklch(95% 0.01767 251.89)"
+        ],
+        "rampPurpose": "Synthesized preview ramp only; these tones are not runtime app tokens."
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "Muted",
+        "tonalRamp": [
+          "oklch(15% 0.02238 248.29)",
+          "oklch(26% 0.02238 248.29)",
+          "oklch(38% 0.02238 248.29)",
+          "oklch(49% 0.02238 248.29)",
+          "oklch(61% 0.02238 248.29)",
+          "oklch(72% 0.02238 248.29)",
+          "oklch(84% 0.02238 248.29)",
+          "oklch(95% 0.02238 248.29)"
+        ],
+        "rampPurpose": "Synthesized preview ramp only; these tones are not runtime app tokens."
+      },
+      "border": {
+        "role": "neutral",
+        "displayName": "Border",
+        "tonalRamp": [
+          "oklch(15% 0.00943 242.85)",
+          "oklch(26% 0.00943 242.85)",
+          "oklch(38% 0.00943 242.85)",
+          "oklch(49% 0.00943 242.85)",
+          "oklch(61% 0.00943 242.85)",
+          "oklch(72% 0.00943 242.85)",
+          "oklch(84% 0.00943 242.85)",
+          "oklch(95% 0.00943 242.85)"
+        ],
+        "rampPurpose": "Synthesized preview ramp only; these tones are not runtime app tokens."
+      },
+      "canvas": {
+        "role": "neutral",
+        "displayName": "Canvas",
+        "tonalRamp": [
+          "oklch(15% 0.00691 247.90)",
+          "oklch(26% 0.00691 247.90)",
+          "oklch(38% 0.00691 247.90)",
+          "oklch(49% 0.00691 247.90)",
+          "oklch(61% 0.00691 247.90)",
+          "oklch(72% 0.00691 247.90)",
+          "oklch(84% 0.00691 247.90)",
+          "oklch(95% 0.00691 247.90)"
+        ],
+        "rampPurpose": "Synthesized preview ramp only; these tones are not runtime app tokens."
+      },
+      "white": {
+        "role": "neutral",
+        "displayName": "White",
+        "tonalRamp": [
+          "oklch(15% 0.00000 89.88)",
+          "oklch(26% 0.00000 89.88)",
+          "oklch(38% 0.00000 89.88)",
+          "oklch(49% 0.00000 89.88)",
+          "oklch(61% 0.00000 89.88)",
+          "oklch(72% 0.00000 89.88)",
+          "oklch(84% 0.00000 89.88)",
+          "oklch(95% 0.00000 89.88)"
+        ],
+        "rampPurpose": "Synthesized preview ramp only; these tones are not runtime app tokens."
+      },
+      "panel": {
+        "role": "neutral",
+        "displayName": "Panel",
+        "tonalRamp": [
+          "oklch(15% 0.00171 247.84)",
+          "oklch(26% 0.00171 247.84)",
+          "oklch(38% 0.00171 247.84)",
+          "oklch(49% 0.00171 247.84)",
+          "oklch(61% 0.00171 247.84)",
+          "oklch(72% 0.00171 247.84)",
+          "oklch(84% 0.00171 247.84)",
+          "oklch(95% 0.00171 247.84)"
+        ],
+        "rampPurpose": "Synthesized preview ramp only; these tones are not runtime app tokens."
+      },
+      "recent-surface": {
+        "role": "neutral",
+        "displayName": "Recent Surface",
+        "tonalRamp": [
+          "oklch(15% 0.00342 247.86)",
+          "oklch(26% 0.00342 247.86)",
+          "oklch(38% 0.00342 247.86)",
+          "oklch(49% 0.00342 247.86)",
+          "oklch(61% 0.00342 247.86)",
+          "oklch(72% 0.00342 247.86)",
+          "oklch(84% 0.00342 247.86)",
+          "oklch(95% 0.00342 247.86)"
+        ],
+        "rampPurpose": "Synthesized preview ramp only; these tones are not runtime app tokens."
+      },
+      "workspace-surface": {
+        "role": "neutral",
+        "displayName": "Workspace Surface",
+        "tonalRamp": [
+          "oklch(15% 0.00418 236.50)",
+          "oklch(26% 0.00418 236.50)",
+          "oklch(38% 0.00418 236.50)",
+          "oklch(49% 0.00418 236.50)",
+          "oklch(61% 0.00418 236.50)",
+          "oklch(72% 0.00418 236.50)",
+          "oklch(84% 0.00418 236.50)",
+          "oklch(95% 0.00418 236.50)"
+        ],
+        "rampPurpose": "Synthesized preview ramp only; these tones are not runtime app tokens."
+      },
+      "tool-hover": {
+        "role": "neutral",
+        "displayName": "Tool Hover",
+        "tonalRamp": [
+          "oklch(15% 0.00000 89.88)",
+          "oklch(26% 0.00000 89.88)",
+          "oklch(38% 0.00000 89.88)",
+          "oklch(49% 0.00000 89.88)",
+          "oklch(61% 0.00000 89.88)",
+          "oklch(72% 0.00000 89.88)",
+          "oklch(84% 0.00000 89.88)",
+          "oklch(95% 0.00000 89.88)"
+        ],
+        "rampPurpose": "Synthesized preview ramp only; these tones are not runtime app tokens."
+      },
+      "annotation-blue": {
+        "role": "secondary",
+        "displayName": "Annotation Blue",
+        "tonalRamp": [
+          "oklch(15% 0.14897 255.33)",
+          "oklch(26% 0.14897 255.33)",
+          "oklch(38% 0.14897 255.33)",
+          "oklch(49% 0.14897 255.33)",
+          "oklch(61% 0.14897 255.33)",
+          "oklch(72% 0.14897 255.33)",
+          "oklch(84% 0.14897 255.33)",
+          "oklch(95% 0.14897 255.33)"
+        ],
+        "rampPurpose": "Synthesized preview ramp only; these tones are not runtime app tokens."
+      },
+      "annotation-red": {
+        "role": "secondary",
+        "displayName": "Annotation Red",
+        "tonalRamp": [
+          "oklch(15% 0.17629 22.29)",
+          "oklch(26% 0.17629 22.29)",
+          "oklch(38% 0.17629 22.29)",
+          "oklch(49% 0.17629 22.29)",
+          "oklch(61% 0.17629 22.29)",
+          "oklch(72% 0.17629 22.29)",
+          "oklch(84% 0.17629 22.29)",
+          "oklch(95% 0.17629 22.29)"
+        ],
+        "rampPurpose": "Synthesized preview ramp only; these tones are not runtime app tokens."
+      },
+      "annotation-purple": {
+        "role": "secondary",
+        "displayName": "Annotation Purple",
+        "tonalRamp": [
+          "oklch(15% 0.16600 315.42)",
+          "oklch(26% 0.16600 315.42)",
+          "oklch(38% 0.16600 315.42)",
+          "oklch(49% 0.16600 315.42)",
+          "oklch(61% 0.16600 315.42)",
+          "oklch(72% 0.16600 315.42)",
+          "oklch(84% 0.16600 315.42)",
+          "oklch(95% 0.16600 315.42)"
+        ],
+        "rampPurpose": "Synthesized preview ramp only; these tones are not runtime app tokens."
+      },
+      "annotation-amber": {
+        "role": "secondary",
+        "displayName": "Annotation Amber",
+        "tonalRamp": [
+          "oklch(15% 0.14286 66.67)",
+          "oklch(26% 0.14286 66.67)",
+          "oklch(38% 0.14286 66.67)",
+          "oklch(49% 0.14286 66.67)",
+          "oklch(61% 0.14286 66.67)",
+          "oklch(72% 0.14286 66.67)",
+          "oklch(84% 0.14286 66.67)",
+          "oklch(95% 0.14286 66.67)"
+        ],
+        "rampPurpose": "Synthesized preview ramp only; these tones are not runtime app tokens."
+      },
+      "annotation-green": {
+        "role": "secondary",
+        "displayName": "Annotation Green",
+        "tonalRamp": [
+          "oklch(15% 0.11402 149.64)",
+          "oklch(26% 0.11402 149.64)",
+          "oklch(38% 0.11402 149.64)",
+          "oklch(49% 0.11402 149.64)",
+          "oklch(61% 0.11402 149.64)",
+          "oklch(72% 0.11402 149.64)",
+          "oklch(84% 0.11402 149.64)",
+          "oklch(95% 0.11402 149.64)"
+        ],
+        "rampPurpose": "Synthesized preview ramp only; these tones are not runtime app tokens."
+      },
+      "annotation-brown": {
+        "role": "secondary",
+        "displayName": "Annotation Brown",
+        "tonalRamp": [
+          "oklch(15% 0.08877 49.97)",
+          "oklch(26% 0.08877 49.97)",
+          "oklch(38% 0.08877 49.97)",
+          "oklch(49% 0.08877 49.97)",
+          "oklch(61% 0.08877 49.97)",
+          "oklch(72% 0.08877 49.97)",
+          "oklch(84% 0.08877 49.97)",
+          "oklch(95% 0.08877 49.97)"
+        ],
+        "rampPurpose": "Synthesized preview ramp only; these tones are not runtime app tokens."
+      }
+    },
+    "typographyMeta": {
+      "body": {
+        "displayName": "Body",
+        "purpose": "Native egui logical points; runtime SFNS with egui proportional fallback."
+      },
+      "button": {
+        "displayName": "Button",
+        "purpose": "Native egui logical points; runtime SFNS with egui proportional fallback."
+      },
+      "small": {
+        "displayName": "Small",
+        "purpose": "Native egui logical points; runtime SFNS with egui proportional fallback."
+      },
+      "tool-label": {
+        "displayName": "Tool Label",
+        "purpose": "Native egui logical points; runtime SFNS with egui proportional fallback."
+      },
+      "section": {
+        "displayName": "Section",
+        "purpose": "Native egui logical points; runtime SFNS with egui proportional fallback."
+      },
+      "guide-step": {
+        "displayName": "Guide Step",
+        "purpose": "Native egui logical points; runtime SFNS with egui proportional fallback."
+      },
+      "brand": {
+        "displayName": "Brand",
+        "purpose": "Native egui logical points; runtime SFNS with egui proportional fallback."
+      }
+    },
+    "shadows": [],
+    "motion": [],
+    "breakpoints": [],
+    "desktopViewport": {
+      "normalInnerPoints": [
+        1380,
+        850
+      ],
+      "minimumInnerPoints": [
+        1100,
+        700
+      ],
+      "behavior": "Fixed desktop panels and scrolling; no mobile layout."
+    },
+    "renderingNotes": [
+      "HTML/CSS component snippets are representative browser translations of native egui widgets; they do not replace or exactly reproduce the framework renderer.",
+      "One egui logical point maps to one CSS pixel in these previews. Runtime font loading and native focus/disabled/popup defaults remain in the Rust implementation.",
+      "Synthesized tonal ramps support the panel only. Do not promote them to shipped palette values."
+    ],
+    "sourceEvidence": [
+      "src/widgets.rs:6-24 palette; tool_button/style_button/image_tile/section",
+      "src/main.rs:77-110 runtime font and shared style; 488-500 active selection override; 628-630 viewport",
+      "src/workspace.rs:158-247 header; 251-311 shelf; 350-407 filmstrip and inspector; 409-462 text before styles; 637-741 library filtering and pagination; 790-884 guides",
+      ".impeccable/review/editor-desktop.png",
+      ".impeccable/review/editor-minimum.png",
+      "PRODUCT.md",
+      "docs/editor-surface.md"
+    ]
+  },
+  "components": [
+    {
+      "name": "Capture",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Native primary action; browser preview translates the observed palette, size and padding.",
+      "html": "<button class=\"ds-capture\">Capture</button>",
+      "css": ".ds-capture{font-family:-apple-system,BlinkMacSystemFont,sans-serif;font-size:14px;color:#252c34;padding:8px 12px;background:white;border:1px solid #dae0e5;height:34px;min-width:92px;background:#1b696f;color:white}.ds-capture:focus-visible{outline:1px solid #1b696f;outline-offset:2px}"
+    },
+    {
+      "name": "Secondary action",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Native egui action with authored shared colors and padding; framework rendering details remain native.",
+      "html": "<button class=\"ds-action\">Save</button>",
+      "css": ".ds-action{font-family:-apple-system,BlinkMacSystemFont,sans-serif;font-size:14px;color:#252c34;padding:8px 12px;background:white;border:1px solid #dae0e5;min-height:34px}.ds-action:hover,.ds-action:active{background:#e0f0f0}.ds-action:focus-visible{outline:1px solid #1b696f}"
+    },
+    {
+      "name": "Workspace navigation",
+      "kind": "nav",
+      "refersTo": "workspace-tab",
+      "description": "Shared Editor, Library and Guides navigation with selected tint.",
+      "html": "<nav class=\"ds-nav\"><button aria-current=\"page\">Editor</button><button>Library</button><button>Guides</button></nav>",
+      "css": ".ds-nav{display:flex;gap:8px}.ds-nav button{font-family:-apple-system,BlinkMacSystemFont,sans-serif;font-size:14px;color:#252c34;padding:8px 12px;background:white;border:1px solid #dae0e5;min-width:72px;height:34px}.ds-nav [aria-current],.ds-nav button:hover,.ds-nav button:active{background:#e0f0f0}.ds-nav button:focus-visible{outline:1px solid #1b696f}"
+    },
+    {
+      "name": "Library title search",
+      "kind": "input",
+      "refersTo": "",
+      "description": "Title search across the full library; native field translated for panel preview.",
+      "html": "<input class=\"ds-search\" placeholder=\"Search captures\u2026\" aria-label=\"Search captures\">",
+      "css": ".ds-search{font-family:-apple-system,BlinkMacSystemFont,sans-serif;font-size:14px;color:#252c34;width:260px;background:white;border:1px solid #dae0e5;padding:4px}.ds-search:focus-visible{outline:1px solid #1b696f}"
+    },
+    {
+      "name": "Labeled vector tool",
+      "kind": "custom",
+      "refersTo": "tool",
+      "description": "Custom Arrow tool, matching authored icon, label, tint and focus outline.",
+      "html": "<button class=\"ds-tool\" aria-pressed=\"true\"><svg width=\"28\" height=\"28\" viewBox=\"0 0 28 28\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\"><path d=\"M4 24L24 4M14 4h10v10\"/></svg><span>Arrow</span></button>",
+      "css": ".ds-tool{font-family:-apple-system,BlinkMacSystemFont,sans-serif;font-size:14px;color:#252c34;width:67px;height:66px;border:0;border-radius:6px;background:transparent;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;font-size:13px}.ds-tool[aria-pressed=true]{background:#e0f0f0;color:#1b696f}.ds-tool:hover{background:#efefef}.ds-tool[aria-pressed=true]:hover{background:#e0f0f0}.ds-tool:focus-visible{outline:1px solid #1b696f;background:#efefef}"
+    },
+    {
+      "name": "Quick Style",
+      "kind": "custom",
+      "refersTo": "quick-style",
+      "description": "Custom visual annotation preset with strong selected outline.",
+      "html": "<button class=\"ds-style\" aria-label=\"Arrow style 1\" aria-pressed=\"true\"><svg width=\"28\" height=\"28\" viewBox=\"0 0 28 28\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\"><path d=\"M4 24L24 4M14 4h10v10\"/></svg></button>",
+      "css": ".ds-style{width:59px;height:50px;background:white;color:#1b696f;border:1px solid #dae0e5;border-radius:5px}.ds-style[aria-pressed=true]{background:#e0f0f0;border:2px solid #1b696f}.ds-style:focus-visible{outline:1px solid #1b696f;outline-offset:2px}"
+    },
+    {
+      "name": "Capture thumbnail",
+      "kind": "card",
+      "refersTo": "recent-image",
+      "description": "Aspect-fitted image with clipped title and selected accent border. Preview contains an inline placeholder, not a real capture.",
+      "html": "<button class=\"ds-tile\" title=\"Example capture\" aria-pressed=\"true\"><svg viewBox=\"0 0 122 55\" role=\"img\" aria-label=\"Preview placeholder\"><rect width=\"122\" height=\"55\" fill=\"#e7ebef\"/><rect x=\"9\" y=\"8\" width=\"104\" height=\"39\" fill=\"white\"/></svg><span>Example capture</span></button>",
+      "css": ".ds-tile{font-family:-apple-system,BlinkMacSystemFont,sans-serif;font-size:14px;color:#252c34;width:136px;height:92px;border:1px solid #dae0e5;border-radius:5px;background:white;padding:7px;display:flex;flex-direction:column;text-align:left;gap:5px;font-size:12px}.ds-tile svg{width:100%;height:55px}.ds-tile span{white-space:nowrap;overflow:hidden}.ds-tile[aria-pressed=true]{background:#e0f0f0;border:2px solid #1b696f}.ds-tile:focus-visible{outline:1px solid #1b696f;outline-offset:2px}"
+    },
+    {
+      "name": "Guide step card",
+      "kind": "card",
+      "refersTo": "guide-card",
+      "description": "Caption editing and step actions beside a fixed preview column. Browser preview is representative.",
+      "html": "<article class=\"ds-guide\"><div class=\"ds-guide-image\">Image snapshot</div><div><strong>Step 1</strong><textarea aria-label=\"Step caption\" placeholder=\"What should your colleague do here?\"></textarea><button>Move up</button><button>Move down</button><button>Remove</button></div></article>",
+      "css": ".ds-guide{font-family:-apple-system,BlinkMacSystemFont,sans-serif;font-size:14px;color:#252c34;display:flex;gap:20px;padding:18px;border-radius:6px;background:white}.ds-guide-image{width:300px;min-height:150px;background:#e7ebef;display:grid;place-items:center}.ds-guide strong{font-size:18px}.ds-guide textarea{font-family:-apple-system,BlinkMacSystemFont,sans-serif;font-size:14px;color:#252c34;display:block;margin:8px 0;background:white;border:1px solid #dae0e5}.ds-guide button{font-family:-apple-system,BlinkMacSystemFont,sans-serif;font-size:14px;color:#252c34;padding:8px 12px;background:white;border:1px solid #dae0e5;margin-right:8px}.ds-guide button:hover,.ds-guide button:active{background:#e0f0f0}.ds-guide textarea:focus-visible,.ds-guide button:focus-visible{outline:1px solid #1b696f}"
+    }
+  ],
+  "narrative": {
+    "northStar": "User-pinned Snagit-style desktop workspace",
+    "overview": "Framewell uses the user-pinned Snagit-style desktop workspace: a large image canvas, labeled vector tools, visual styles, contextual properties, and a visual capture library. Original Framewell branding and code define the implementation.\n\nEditor, Library, and Guides share light desktop surfaces, readable dark text, muted supporting copy, teal selection, and compact controls. Content previews carry the visual hierarchy; color highlights actions and selection rather than decorating the workspace. This is a native macOS Rust/egui prototype, with no claim of Snagit feature parity.",
+    "keyCharacteristics": [
+      "Canvas-led desktop hierarchy with visible labeled tools.",
+      "Shared teal selection, neutral surfaces, and image previews across workspaces.",
+      "Editable annotations and contextual properties, with reviewed AI captions."
+    ],
+    "rules": [
+      {
+        "name": "Shared Selection",
+        "body": "Use teal and its pale tint for the current workspace, selected tool, selected image, and active visual style. Annotation preset colors remain content colors.",
+        "section": "colors"
+      },
+      {
+        "name": "Equal Header Controls",
+        "body": "Keep the workspace tabs, Import, Save, Export, capture-mode selector, and Capture aligned to the shared header control height.",
+        "section": "layout"
+      },
+      {
+        "name": "Text Before Styles",
+        "body": "For Text, Callout, and Step, show the editable text field before Quick Styles; the inspector scrolls when the remaining properties exceed its height.",
+        "section": "components"
+      }
+    ],
+    "dos": [
+      "Do keep header workspace tabs, action buttons, and the capture-mode selector aligned at the shared header control height.",
+      "Do use authored vector tool icons with visible labels and tooltips.",
+      "Do put editable Text, Callout, and Step text before Quick Styles in the inspector.",
+      "Do retain real image thumbnails, title search across the full library, and pagination.",
+      "Do load the installed macOS font at runtime and retain the egui proportional fallback.",
+      "Do share the palette and spacing grammar across Editor, Library, and Guides."
+    ],
+    "donts": [
+      "Don't replace the visual library with a cramped filename sidebar.",
+      "Don't redistribute Apple font files.",
+      "Don't describe scrolling capture, OCR, crop/resize handles, stamps, richer effects, JEV, image generation, or video timeline editing as shipped features.",
+      "Don't treat resemblance to the reference as evidence of feature parity."
+    ]
+  }
+}
