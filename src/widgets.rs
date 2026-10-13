@@ -41,7 +41,7 @@ pub fn hint(tool: Tool) -> &'static str {
         Tool::Redact => "Drag over private information. PNG exports use an opaque mask.",
         Tool::Text => "Enter text in Tool Properties, then drag to place it.",
         Tool::Callout => "Enter an explanation in Tool Properties, then drag to place it.",
-        Tool::Step => "Drag to place the next numbered step.",
+        Tool::Step => "Click to place a step. Each click advances the sequence.",
         Tool::Pen => "Drag to draw freely on the image.",
         Tool::Blur => "Drag to blur an area. Use Redact to protect sensitive information.",
     }

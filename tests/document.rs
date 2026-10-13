@@ -10,6 +10,7 @@ fn object(tool: Tool) -> Object {
         width: 4.,
         text: "Secret".into(),
         points: vec![],
+        step: None,
     }
 }
 #[test]
@@ -97,6 +98,11 @@ fn guide_html_cannot_execute_caption() {
     assert!(!html.contains("<script>"));
     assert!(html.contains("&lt;script&gt;"));
     assert!(p.join("step-1.png").exists());
+    assert_eq!(
+        std::fs::read(p.join("cover.png")).unwrap(),
+        include_bytes!("../assets/framewell-guide-cover.png")
+    );
+    assert!(html.contains("cover.png"));
     std::fs::remove_dir_all(p).unwrap();
 }
 #[test]

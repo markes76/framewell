@@ -1,3 +1,11 @@
+## Step tool and Metal rendering (alpha 4)
+
+- 27 automated tests cover document safety/rendering, step centering and undo, letter rollover, legacy step compatibility, styled-step save/open pixel fidelity, guide artwork inclusion, capture errors and scrolling joins. Formatting, Clippy and release build checked on the final source.
+- Live macOS VM: single clicks placed 1/2/3. Toolbar Undo restored Next 3. Circle and square styles, letter sequence, selected marker sizing (80px), saved Cobalt guide preset, project save/relaunch/reopen and 1080x680 PNG export verified. Saved style JSON retains fill, text/border colors, border width and marker/text size; after relaunch, choosing the saved Cobalt guide style restores the 80px square preset.
+- Inspection exposed horizontal corruption after repeated resizing under OpenGL. The macOS build now uses wgpu/Metal. Repeated desktop/minimum resize cycles with inspector and guide scrolling remained readable and interactive. This verifies the replacement path in this VM; it does not establish the underlying OpenGL driver cause or coverage on all GPUs.
+- Full-height Properties keeps the primary step controls visible at the minimum 1100x700 inner size. Advanced saved styles can scroll. Actual screenshots are steps-desktop/minimum, steps-edit/edit-minimum and guide-art-desktop/minimum in `.impeccable/review/`.
+- Live guide HTML export produced index.html, two screenshot PNGs and cover.png; the exported artwork SHA-256 matched the bundled asset. Generated artwork is bundled locally and exported as cover.png. Asset source, exact prompt and font license are in assets/. No live AI API was needed for these local workflow checks.
+
 # Verification — 13 October 2026
 
 ## Capture repair and guided scrolling

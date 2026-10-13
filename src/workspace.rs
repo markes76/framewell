@@ -6,6 +6,15 @@ impl Framewell {
             .selected
             .and_then(|i| self.editor.state.document.objects.get(i))
         {
+            if o.tool == Tool::Step {
+                self.step_preset.style = o.step.clone().unwrap_or(step::StepStyle {
+                    border_width: 0.,
+                    ..Default::default()
+                });
+                self.step_preset.size = o.bounds()[2];
+                self.step_preset.fill = o.color;
+                self.step_preset.font_size = if o.step.is_some() { o.width } else { 25. };
+            }
             self.text = o.text.clone();
             self.width = o.width;
             self.color =
@@ -284,11 +293,13 @@ impl Framewell {
                     ui.vertical(|ui| {
                         if ui.button("Undo").on_hover_text("Command Z").clicked() {
                             self.editor.undo();
+                            self.refresh_step_sequence();
                             self.selected = None;
                             self.changed();
                         }
                         if ui.button("Redo").on_hover_text("Shift Command Z").clicked() {
                             self.editor.redo();
+                            self.refresh_step_sequence();
                             self.selected = None;
                             self.changed();
                         }
@@ -409,7 +420,11 @@ impl Framewell {
             .selected
             .and_then(|i| self.editor.state.document.objects.get(i))
             .map_or(self.tool, |o| o.tool);
-        if matches!(target, Tool::Text | Tool::Callout | Tool::Step) {
+        if target == Tool::Step {
+            self.step_properties(ui, ctx);
+            return;
+        }
+        if matches!(target, Tool::Text | Tool::Callout) {
             section(ui, &format!("{} text", label(target)));
             if ui
                 .add(
@@ -788,6 +803,50 @@ impl Framewell {
         }
     }
     pub(crate) fn guide_view(&mut self, ui: &mut Ui) {
+        if self.guide_art.is_none()
+            && let Ok(image) =
+                image::load_from_memory(include_bytes!("../assets/framewell-guide-cover.png"))
+        {
+            let image = image.to_rgba8();
+            self.guide_art = Some(ui.ctx().load_texture(
+                "Original Framewell guide artwork",
+                ColorImage::from_rgba_unmultiplied(
+                    [image.width() as usize, image.height() as usize],
+                    image.as_raw(),
+                ),
+                TextureOptions::LINEAR,
+            ));
+        }
+        let (cover, _) = ui.allocate_exact_size(vec2(ui.available_width(), 160.), Sense::hover());
+        ui.painter()
+            .rect_filled(cover, 10, Color32::from_rgb(10, 54, 63));
+        if let Some(art) = &self.guide_art {
+            let r = Rect::from_min_max(
+                pos2(cover.right() - 240., cover.top()),
+                cover.right_bottom(),
+            );
+            ui.painter().image(
+                art.id(),
+                r,
+                Rect::from_min_max(Pos2::ZERO, pos2(1., 1.)),
+                Color32::WHITE,
+            );
+        }
+        ui.painter().text(
+            cover.min + vec2(26., 32.),
+            Align2::LEFT_TOP,
+            "Make the next step clear.",
+            FontId::proportional(30.),
+            Color32::WHITE,
+        );
+        ui.painter().text(
+            cover.min + vec2(26., 83.),
+            Align2::LEFT_TOP,
+            "Capture a process. Add context. Share a guide.",
+            FontId::proportional(15.),
+            Color32::from_rgb(204, 228, 230),
+        );
+        ui.add_space(22.);
         ui.horizontal(|ui| {
             ui.heading("Visual guide");
             ui.label(RichText::new(format!("{} steps", self.steps.len())).color(MUTED));

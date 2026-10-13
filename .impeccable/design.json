@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-13T15:22:31.829943+00:00",
+  "generatedAt": "2026-10-13T17:17:09.468955+00:00",
   "title": "Design System: Framewell Rust",
   "extensions": {
     "colorMeta": {
@@ -258,6 +258,96 @@
           "oklch(95% 0.08877 49.97)"
         ],
         "rampPurpose": "Synthesized preview ramp only; these tones are not runtime app tokens."
+      },
+      "step-teal": {
+        "role": "secondary",
+        "displayName": "Step Teal",
+        "tonalRamp": [
+          "oklch(15% 0.07820 203.17)",
+          "oklch(26% 0.07820 203.17)",
+          "oklch(38% 0.07820 203.17)",
+          "oklch(49% 0.07820 203.17)",
+          "oklch(61% 0.07820 203.17)",
+          "oklch(72% 0.07820 203.17)",
+          "oklch(84% 0.07820 203.17)",
+          "oklch(95% 0.07820 203.17)"
+        ],
+        "rampPurpose": "Synthesized preview ramp only; these tones are not runtime app tokens."
+      },
+      "step-coral": {
+        "role": "secondary",
+        "displayName": "Step Coral",
+        "tonalRamp": [
+          "oklch(15% 0.16286 31.74)",
+          "oklch(26% 0.16286 31.74)",
+          "oklch(38% 0.16286 31.74)",
+          "oklch(49% 0.16286 31.74)",
+          "oklch(61% 0.16286 31.74)",
+          "oklch(72% 0.16286 31.74)",
+          "oklch(84% 0.16286 31.74)",
+          "oklch(95% 0.16286 31.74)"
+        ],
+        "rampPurpose": "Synthesized preview ramp only; these tones are not runtime app tokens."
+      },
+      "step-cobalt": {
+        "role": "secondary",
+        "displayName": "Step Cobalt",
+        "tonalRamp": [
+          "oklch(15% 0.15683 264.26)",
+          "oklch(26% 0.15683 264.26)",
+          "oklch(38% 0.15683 264.26)",
+          "oklch(49% 0.15683 264.26)",
+          "oklch(61% 0.15683 264.26)",
+          "oklch(72% 0.15683 264.26)",
+          "oklch(84% 0.15683 264.26)",
+          "oklch(95% 0.15683 264.26)"
+        ],
+        "rampPurpose": "Synthesized preview ramp only; these tones are not runtime app tokens."
+      },
+      "step-ink": {
+        "role": "secondary",
+        "displayName": "Step Ink",
+        "tonalRamp": [
+          "oklch(15% 0.03204 259.68)",
+          "oklch(26% 0.03204 259.68)",
+          "oklch(38% 0.03204 259.68)",
+          "oklch(49% 0.03204 259.68)",
+          "oklch(61% 0.03204 259.68)",
+          "oklch(72% 0.03204 259.68)",
+          "oklch(84% 0.03204 259.68)",
+          "oklch(95% 0.03204 259.68)"
+        ],
+        "rampPurpose": "Synthesized preview ramp only; these tones are not runtime app tokens."
+      },
+      "guide-cover": {
+        "role": "secondary",
+        "displayName": "Guide Cover",
+        "tonalRamp": [
+          "oklch(15% 0.04833 214.64)",
+          "oklch(26% 0.04833 214.64)",
+          "oklch(38% 0.04833 214.64)",
+          "oklch(49% 0.04833 214.64)",
+          "oklch(61% 0.04833 214.64)",
+          "oklch(72% 0.04833 214.64)",
+          "oklch(84% 0.04833 214.64)",
+          "oklch(95% 0.04833 214.64)"
+        ],
+        "rampPurpose": "Synthesized preview ramp only; these tones are not runtime app tokens."
+      },
+      "guide-cover-copy": {
+        "role": "secondary",
+        "displayName": "Guide Cover Copy",
+        "tonalRamp": [
+          "oklch(15% 0.02559 202.80)",
+          "oklch(26% 0.02559 202.80)",
+          "oklch(38% 0.02559 202.80)",
+          "oklch(49% 0.02559 202.80)",
+          "oklch(61% 0.02559 202.80)",
+          "oklch(72% 0.02559 202.80)",
+          "oklch(84% 0.02559 202.80)",
+          "oklch(95% 0.02559 202.80)"
+        ],
+        "rampPurpose": "Synthesized preview ramp only; these tones are not runtime app tokens."
       }
     },
     "typographyMeta": {
@@ -288,11 +378,25 @@
       "brand": {
         "displayName": "Brand",
         "purpose": "Native egui logical points; runtime SFNS with egui proportional fallback."
+      },
+      "step-marker": {
+        "displayName": "Step marker",
+        "purpose": "Bundled Ubuntu Bold; default image-pixel text size, reduced to fit content geometry."
+      },
+      "guide-cover-title": {
+        "displayName": "Guide cover title",
+        "purpose": "Native artwork banner title; runtime macOS proportional UI font."
       }
     },
     "shadows": [],
     "motion": [],
-    "breakpoints": [],
+    "breakpoints": [
+      {
+        "name": "guide-export-narrow",
+        "value": "650px",
+        "scope": "Exported HTML guide only; hides cover artwork and reduces heading and padding."
+      }
+    ],
     "desktopViewport": {
       "normalInnerPoints": [
         1380,
@@ -307,16 +411,22 @@
     "renderingNotes": [
       "HTML/CSS component snippets are representative browser translations of native egui widgets; they do not replace or exactly reproduce the framework renderer.",
       "One egui logical point maps to one CSS pixel in these previews. Runtime font loading and native focus/disabled/popup defaults remain in the Rust implementation.",
-      "Synthesized tonal ramps support the panel only. Do not promote them to shipped palette values."
+      "Synthesized tonal ramps support the panel only. Do not promote them to shipped palette values.",
+      "Native guide artwork is assets/framewell-guide-cover.png; HTML export copies it as cover.png. Component snippets omit the image rather than replacing original artwork with fabricated imagery. macOS uses WGPU/Metal; observed resize repair is scoped, not exhaustive renderer validation."
     ],
     "sourceEvidence": [
-      "src/widgets.rs:6-24 palette; tool_button/style_button/image_tile/section",
-      "src/main.rs:77-110 runtime font and shared style; 488-500 active selection override; 628-630 viewport",
-      "src/workspace.rs:158-247 header; 251-311 shelf; 350-407 filmstrip and inspector; 409-462 text before styles; 637-741 library filtering and pagination; 790-884 guides",
-      ".impeccable/review/editor-desktop.png",
-      ".impeccable/review/editor-minimum.png",
+      "src/widgets.rs: palette and vector controls",
+      "src/main.rs: runtime fonts, widget style, panel order, macOS WGPU renderer and viewport",
+      "src/step_ui.rs: compact Step inspector and persistent named presets",
+      "src/step.rs: geometry and raster marker font",
+      "src/workspace.rs: inspector, filmstrip, library and guide banner",
+      "src/lib.rs: responsive HTML guide export",
       "PRODUCT.md",
-      "docs/editor-surface.md"
+      "docs/editor-surface.md",
+      ".impeccable/review/steps-desktop.png",
+      ".impeccable/review/steps-minimum.png",
+      ".impeccable/review/steps-edit-minimum.png",
+      ".impeccable/review/guide-art-desktop.png"
     ]
   },
   "components": [
@@ -326,7 +436,7 @@
       "refersTo": "button-primary",
       "description": "Native primary action; browser preview translates the observed palette, size and padding.",
       "html": "<button class=\"ds-capture\">Capture</button>",
-      "css": ".ds-capture{font-family:-apple-system,BlinkMacSystemFont,sans-serif;font-size:14px;color:#252c34;padding:8px 12px;background:white;border:1px solid #dae0e5;height:34px;min-width:92px;background:#1b696f;color:white}.ds-capture:focus-visible{outline:1px solid #1b696f;outline-offset:2px}"
+      "css": ".ds-capture{font-family:-apple-system,BlinkMacSystemFont,sans-serif;font-size:14px;color:#252c34;padding:8px 12px;background:white;border:1px solid #dae0e5;height:34px;min-width:92px;background:#1b696f;color:white}.ds-capture:focus-visible{outline:1px solid #1b696f;outline-offset:2px} .ds-capture{border-radius:6px}"
     },
     {
       "name": "Secondary action",
@@ -334,7 +444,7 @@
       "refersTo": "button-secondary",
       "description": "Native egui action with authored shared colors and padding; framework rendering details remain native.",
       "html": "<button class=\"ds-action\">Save</button>",
-      "css": ".ds-action{font-family:-apple-system,BlinkMacSystemFont,sans-serif;font-size:14px;color:#252c34;padding:8px 12px;background:white;border:1px solid #dae0e5;min-height:34px}.ds-action:hover,.ds-action:active{background:#e0f0f0}.ds-action:focus-visible{outline:1px solid #1b696f}"
+      "css": ".ds-action{font-family:-apple-system,BlinkMacSystemFont,sans-serif;font-size:14px;color:#252c34;padding:8px 12px;background:white;border:1px solid #dae0e5;min-height:34px}.ds-action:hover,.ds-action:active{background:#e0f0f0}.ds-action:focus-visible{outline:1px solid #1b696f} .ds-action{border-radius:6px}"
     },
     {
       "name": "Workspace navigation",
@@ -342,7 +452,7 @@
       "refersTo": "workspace-tab",
       "description": "Shared Editor, Library and Guides navigation with selected tint.",
       "html": "<nav class=\"ds-nav\"><button aria-current=\"page\">Editor</button><button>Library</button><button>Guides</button></nav>",
-      "css": ".ds-nav{display:flex;gap:8px}.ds-nav button{font-family:-apple-system,BlinkMacSystemFont,sans-serif;font-size:14px;color:#252c34;padding:8px 12px;background:white;border:1px solid #dae0e5;min-width:72px;height:34px}.ds-nav [aria-current],.ds-nav button:hover,.ds-nav button:active{background:#e0f0f0}.ds-nav button:focus-visible{outline:1px solid #1b696f}"
+      "css": ".ds-nav{display:flex;gap:8px}.ds-nav button{font-family:-apple-system,BlinkMacSystemFont,sans-serif;font-size:14px;color:#252c34;padding:8px 12px;background:white;border:1px solid #dae0e5;min-width:72px;height:34px}.ds-nav [aria-current],.ds-nav button:hover,.ds-nav button:active{background:#e0f0f0}.ds-nav button:focus-visible{outline:1px solid #1b696f} .ds-nav button{border-radius:6px}"
     },
     {
       "name": "Library title search",
@@ -382,7 +492,15 @@
       "refersTo": "guide-card",
       "description": "Caption editing and step actions beside a fixed preview column. Browser preview is representative.",
       "html": "<article class=\"ds-guide\"><div class=\"ds-guide-image\">Image snapshot</div><div><strong>Step 1</strong><textarea aria-label=\"Step caption\" placeholder=\"What should your colleague do here?\"></textarea><button>Move up</button><button>Move down</button><button>Remove</button></div></article>",
-      "css": ".ds-guide{font-family:-apple-system,BlinkMacSystemFont,sans-serif;font-size:14px;color:#252c34;display:flex;gap:20px;padding:18px;border-radius:6px;background:white}.ds-guide-image{width:300px;min-height:150px;background:#e7ebef;display:grid;place-items:center}.ds-guide strong{font-size:18px}.ds-guide textarea{font-family:-apple-system,BlinkMacSystemFont,sans-serif;font-size:14px;color:#252c34;display:block;margin:8px 0;background:white;border:1px solid #dae0e5}.ds-guide button{font-family:-apple-system,BlinkMacSystemFont,sans-serif;font-size:14px;color:#252c34;padding:8px 12px;background:white;border:1px solid #dae0e5;margin-right:8px}.ds-guide button:hover,.ds-guide button:active{background:#e0f0f0}.ds-guide textarea:focus-visible,.ds-guide button:focus-visible{outline:1px solid #1b696f}"
+      "css": ".ds-guide{font-family:-apple-system,BlinkMacSystemFont,sans-serif;font-size:14px;color:#252c34;display:flex;gap:20px;padding:18px;border-radius:6px;background:white}.ds-guide-image{width:300px;min-height:150px;background:#e7ebef;display:grid;place-items:center}.ds-guide strong{font-size:18px}.ds-guide textarea{font-family:-apple-system,BlinkMacSystemFont,sans-serif;font-size:14px;color:#252c34;display:block;margin:8px 0;background:white;border:1px solid #dae0e5}.ds-guide button{font-family:-apple-system,BlinkMacSystemFont,sans-serif;font-size:14px;color:#252c34;padding:8px 12px;background:white;border:1px solid #dae0e5;margin-right:8px}.ds-guide button:hover,.ds-guide button:active{background:#e0f0f0}.ds-guide textarea:focus-visible,.ds-guide button:focus-visible{outline:1px solid #1b696f} .ds-guide button{border-radius:6px}"
+    },
+    {
+      "name": "Step quick preset",
+      "kind": "custom",
+      "refersTo": "step-preset",
+      "description": "Teal circle from the four Step presets. Browser font fallback is representative; native previews and export use bundled Ubuntu Bold.",
+      "html": "<button class=\"ds-step-preset\" aria-label=\"Teal step style\"><span>1</span><small>Teal</small></button>",
+      "css": ".ds-step-preset{width:56px;height:54px;background:transparent;border:0;border-radius:6px;color:#252c34;display:flex;flex-direction:column;align-items:center;gap:3px}.ds-step-preset span{display:grid;place-items:center;width:32px;height:32px;border:1px solid white;border-radius:50%;background:#176f76;color:white;font:700 17px Ubuntu,sans-serif}.ds-step-preset small{font:11px -apple-system,sans-serif}.ds-step-preset:hover{background:#e0f0f0}.ds-step-preset:focus-visible{outline:1px solid #1b696f}"
     }
   ],
   "narrative": {
@@ -406,22 +524,32 @@
       },
       {
         "name": "Text Before Styles",
-        "body": "For Text, Callout, and Step, show the editable text field before Quick Styles; the inspector scrolls when the remaining properties exceed its height.",
+        "body": "For Text and Callout, show the editable text field before Quick Styles; the inspector scrolls when the remaining properties exceed its height.",
+        "section": "components"
+      },
+      {
+        "name": "Step Settings",
+        "body": "Keep sequence or selected-marker label, four presets, and shape/size/color controls ahead of saved-style management; allow the inspector to scroll for later actions.",
         "section": "components"
       }
     ],
     "dos": [
       "Do keep header workspace tabs, action buttons, and the capture-mode selector aligned at the shared header control height.",
       "Do use authored vector tool icons with visible labels and tooltips.",
-      "Do put editable Text, Callout, and Step text before Quick Styles in the inspector.",
+      "Do put editable Text and Callout text before Quick Styles; use the dedicated sequence-or-label ordering for Step.",
       "Do retain real image thumbnails, title search across the full library, and pagination.",
       "Do load the installed macOS font at runtime and retain the egui proportional fallback.",
-      "Do share the palette and spacing grammar across Editor, Library, and Guides."
+      "Do share the palette and spacing grammar across Editor, Library, and Guides.",
+      "Do keep primary Step settings visible at the minimum viewport and saved styles below them.",
+      "Do preserve actual screenshots beneath the decorative guide cover.",
+      "Do keep scrolling selection protected by the native modal, place Finish/Cancel outside the selected content, and return the result to the editor for join review.",
+      "Do distinguish capture permission recovery from cancellation and capture failure; retain the prior image on cancellation or failure."
     ],
     "donts": [
       "Don't replace the visual library with a cramped filename sidebar.",
       "Don't redistribute Apple font files.",
-      "Guided manual downward scrolling capture on the primary display is implemented; don't describe automatic or horizontal scrolling, OCR, crop/resize handles, stamps, richer effects, JEV, OpenAI image generation/editing, or video timeline editing as shipped features.",
+      "Don't describe automatic or horizontal scrolling, OCR, crop/resize handles, stamps, richer effects, JEV, OpenAI image generation/editing, or video timeline editing as shipped features.",
+      "Don't infer production signing or notarization from the VM's persistent local development certificate; public development bundles remain self-signed and unnotarized.",
       "Don't treat resemblance to the reference as evidence of feature parity."
     ]
   }

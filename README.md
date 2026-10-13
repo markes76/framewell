@@ -4,16 +4,18 @@ An open-source Rust workspace for capturing screens, adding editable explanation
 
 **Early rebuild, v0.1.0.** This is the beginning of a replacement for the original Swift prototype. It is not a production release or a complete Snagit/Camtasia replacement.
 
-![Framewell prototype editor with original synthetic software content](.impeccable/review/editor-desktop.png)
+![Framewell prototype editor with original synthetic software content](.impeccable/review/steps-desktop.png)
 
 ## What works in the prototype
 
 - Canvas-led desktop editor with labeled vector tools, visual Quick Styles, contextual properties, layers and a recent-capture strip.
 - Visual capture library with previews, editable titles, pagination and search. Saving updates the open project instead of making another library entry.
 - PNG/JPEG import; arrows, rectangles, highlights, opaque redaction, text, callouts, numbered steps, pen and blur.
+- Click-to-place step markers with number/letter sequences, circle/square/diamond shapes, size and text controls, separate fill/text/border colors, editable labels and saved reusable styles.
 - Select/move/delete objects, live styling, undo/redo, editable project save/reopen and PNG export.
 - macOS region/window/display capture through the operating system, with distinct permission, cancellation and failure messages.
 - Guided vertical scrolling capture: select the content area, scroll downward slowly, then Finish to review a stitched image.
+- Original OpenAI-generated guide cover artwork, bundled locally in the workspace and HTML export.
 - Dedicated guide workspace with image snapshots, editable captions, step ordering, local save/restore and HTML+PNG export. The prototype keeps one current guide, with up to 50 steps within a total 50-million-pixel budget.
 - Optional AI explanation drafts through your existing Codex CLI login. Review before applying; changes during a request discard its draft. No credentials are read from account files or committed to the project.
 
@@ -26,7 +28,7 @@ cargo run --locked
 cargo test --locked
 ```
 
-On macOS:
+On macOS, the editor uses Metal through wgpu (other platforms retain OpenGL):
 
 ```sh
 ./scripts/bundle-macos.sh
@@ -45,6 +47,12 @@ After replacing an older ad hoc build, grant the installed app access in Privacy
  Linux and Windows initially support import/edit/export; native capture on those systems is future work.
 
 For AI drafts, install and sign in to the Codex CLI yourself. `FRAMEWELL_CODEX_BIN` optionally specifies the executable. Your existing account limits apply. Clicking **Draft explanation** sends the current rendered image to the configured Codex service. The default installation also checks `$HOME/.local/bin/codex`.
+
+## Step markers
+
+Choose **Step** (N) and click on the image. Each click places the current style and advances the number or letter; no drag is needed. The Properties panel controls the sequence, next value, shape, marker/text size, and fill/text/border colors. **Restart** resets the sequence. Choose **Move** (V) and click a marker to edit its label or appearance. **My saved styles** stores reusable presets; **Apply style to all steps** updates the current image's markers and can be undone.
+
+![Editable step settings at the minimum supported window size](.impeccable/review/steps-edit-minimum.png)
 
 ## Scrolling capture
 
@@ -70,7 +78,7 @@ See the [Snagit workflow gap list](docs/workflow-gaps.md) for the difference bet
 
 ## Original implementation
 
-Snagit was reviewed as a workflow reference with REA and the installed application UI. This repository contains original Rust implementation, original synthetic demo graphics and a separately licensed Ubuntu font. It contains no TechSmith binaries, artwork, decompiled implementation, private captures, API keys or account tokens.
+Snagit was reviewed as a workflow reference with REA and the installed application UI. This repository contains original Rust implementation, original synthetic demo graphics and separately licensed Ubuntu fonts. It contains no TechSmith binaries, artwork, decompiled implementation, private captures, API keys or account tokens.
 
 Code: MIT. Ubuntu font: [Ubuntu Font Licence](assets/UFL.txt). Dependencies retain their own licenses.
 

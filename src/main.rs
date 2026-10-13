@@ -1,6 +1,7 @@
 mod guide;
 mod platform;
 mod scroll_ui;
+mod step_ui;
 mod widgets;
 mod workspace;
 use eframe::egui::{self, *};
@@ -46,6 +47,12 @@ struct Framewell {
     style_editing: bool,
     scroll_preview: Option<scroll_ui::ScrollPreview>,
     scroll_run: Option<scroll_ui::ScrollRun>,
+    step_preset: step::StepPreset,
+    step_sequence: step::StepSequence,
+    step_next: u32,
+    saved_step_presets: Vec<step::StepPreset>,
+    step_preset_name: String,
+    guide_art: Option<TextureHandle>,
 }
 #[derive(Clone, Copy, PartialEq)]
 enum Workspace {
@@ -81,9 +88,17 @@ impl Framewell {
     fn new(cc: &eframe::CreationContext<'_>) -> Self {
         cc.egui_ctx.set_theme(ThemePreference::Light);
         cc.egui_ctx.set_visuals(Visuals::light());
+        let mut fonts = FontDefinitions::default();
+        fonts.font_data.insert(
+            "Step bold".into(),
+            FontData::from_static(include_bytes!("../assets/Ubuntu-Bold.ttf")).into(),
+        );
+        fonts.families.insert(
+            FontFamily::Name("Step bold".into()),
+            vec!["Step bold".into()],
+        );
         // Use the installed platform font; Apple font files are never bundled.
         if let Ok(bytes) = std::fs::read("/System/Library/Fonts/SFNS.ttf") {
-            let mut fonts = FontDefinitions::default();
             fonts
                 .font_data
                 .insert("macOS UI".into(), FontData::from_owned(bytes).into());
@@ -92,8 +107,8 @@ impl Framewell {
                 .entry(FontFamily::Proportional)
                 .or_default()
                 .insert(0, "macOS UI".into());
-            cc.egui_ctx.set_fonts(fonts);
         }
+        cc.egui_ctx.set_fonts(fonts);
         let mut style = (*cc.egui_ctx.style()).clone();
         style.spacing.item_spacing = vec2(8., 8.);
         style
@@ -108,6 +123,12 @@ impl Framewell {
         style.visuals.override_text_color = Some(INK);
         style.visuals.panel_fill = Color32::from_rgb(249, 250, 251);
         style.visuals.widgets.inactive.bg_fill = Color32::WHITE;
+        style.visuals.widgets.inactive.weak_bg_fill = Color32::WHITE;
+        style.visuals.widgets.hovered.weak_bg_fill = TINT;
+        style.visuals.widgets.active.weak_bg_fill = TINT;
+        style.visuals.widgets.inactive.corner_radius = CornerRadius::same(6);
+        style.visuals.widgets.hovered.corner_radius = CornerRadius::same(6);
+        style.visuals.widgets.active.corner_radius = CornerRadius::same(6);
         style.visuals.widgets.inactive.bg_stroke = Stroke::new(1.0_f32, BORDER);
         style.visuals.widgets.hovered.bg_fill = TINT;
         style.visuals.widgets.active.bg_fill = TINT;
@@ -159,8 +180,15 @@ impl Framewell {
             style_editing: false,
             scroll_preview: None,
             scroll_run: None,
+            step_preset: step::StepPreset::default(),
+            step_sequence: step::StepSequence::Numbers,
+            step_next: 1,
+            saved_step_presets: vec![],
+            step_preset_name: "My style".into(),
+            guide_art: None,
         };
         s.editor.state.document.title = "Example capture (synthetic)".into();
+        s.load_step_presets();
         s.refresh_library();
         match guide::load(&s.root.join("guide")) {
             Ok(steps) => s.steps = steps,
@@ -174,6 +202,7 @@ impl Framewell {
     fn replace_editor(&mut self, mut editor: Editor) {
         editor.revision = self.editor.revision + 1;
         self.editor = editor;
+        self.refresh_step_sequence();
         self.selected = None;
         self.project_path = None;
         self.zoom = 1.;
@@ -401,20 +430,12 @@ impl Framewell {
         }
     }
     fn new_object(&self, a: [f32; 2]) -> Object {
-        let text = if self.tool == Tool::Step {
-            (self
-                .editor
-                .state
-                .document
-                .objects
-                .iter()
-                .filter(|o| o.tool == Tool::Step)
-                .count()
-                + 1)
-            .to_string()
-        } else {
-            self.text.clone()
-        };
+        if self.tool == Tool::Step {
+            return self
+                .step_preset
+                .marker(a, self.step_sequence.label(self.step_next));
+        }
+        let text = self.text.clone();
         Object {
             id: 0,
             tool: self.tool,
@@ -428,6 +449,7 @@ impl Framewell {
             },
             text,
             points: vec![a],
+            step: None,
         }
     }
     fn canvas(&mut self, ui: &mut Ui) {
@@ -473,6 +495,28 @@ impl Framewell {
             let p = (p - rect.min) / scale;
             [p.x.clamp(0., w), p.y.clamp(0., h)]
         };
+        if self.tool == Tool::Step
+            && response.clicked()
+            && let Some(p) = response.interact_pointer_pos()
+        {
+            self.editor.add(self.new_object(point(p)));
+            self.step_next = (self.step_next + 1).min(9999);
+            self.selected = None;
+            self.changed();
+        }
+        if self.tool == Tool::Step
+            && response.hovered()
+            && let Some(p) = response.hover_pos()
+        {
+            step_ui::marker_preview(
+                &painter,
+                p,
+                self.step_preset.size * scale,
+                &self.step_preset,
+                &self.step_sequence.label(self.step_next),
+            );
+            ui.ctx().set_cursor_icon(CursorIcon::Crosshair);
+        }
         if response.clicked()
             && self.tool == Tool::Select
             && let Some(p) = response.interact_pointer_pos()
@@ -489,7 +533,8 @@ impl Framewell {
         if response.clicked() && self.tool == Tool::Select {
             self.sync_selection();
         }
-        if response.drag_started()
+        if self.tool != Tool::Step
+            && response.drag_started()
             && let Some(p) = drag_press_origin(ui, &response)
         {
             let p = point(p);
@@ -537,9 +582,6 @@ impl Framewell {
             if let Some(mut o) = self.draft.take() {
                 if matches!(o.tool, Tool::Text | Tool::Callout) && o.bounds()[2] < 50. {
                     o.b = [o.a[0] + 250., o.a[1] + 60.];
-                }
-                if o.tool == Tool::Step {
-                    o.b = [o.a[0] + 40., o.a[1] + 40.];
                 }
                 self.editor.add(o);
                 self.selected = Some(self.editor.state.document.objects.len() - 1);
@@ -590,6 +632,7 @@ impl eframe::App for Framewell {
             } else {
                 self.editor.undo();
             }
+            self.refresh_step_sequence();
             self.selected = None;
             self.changed();
         }
@@ -601,6 +644,16 @@ impl eframe::App for Framewell {
             }
         }
         if self.scroll_preview.is_none() && !ctx.wants_keyboard_input() {
+            if ctx.input(|i| !i.modifiers.command && i.key_pressed(Key::N)) {
+                self.tool = Tool::Step;
+                self.selected = None;
+                self.inspector = Inspector::Properties;
+            }
+            if ctx.input(|i| !i.modifiers.command && i.key_pressed(Key::V)) {
+                self.tool = Tool::Select;
+                self.selected = None;
+            }
+
             if ctx.input(|i| i.key_pressed(Key::Escape)) {
                 self.selected = None;
                 self.tool = Tool::Select;
@@ -615,8 +668,8 @@ impl eframe::App for Framewell {
         }
         self.footer(ctx);
         if self.workspace == Workspace::Editor {
-            self.filmstrip(ctx);
             self.properties(ctx);
+            self.filmstrip(ctx);
             CentralPanel::default()
                 .frame(egui::Frame::NONE.fill(CANVAS))
                 .show(ctx, |ui| {
@@ -637,6 +690,18 @@ impl eframe::App for Framewell {
                                 if self.modified {
                                     ui.label(RichText::new("Unsaved").small().color(MUTED));
                                 }
+                                ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
+                                    if self.tool == Tool::Step {
+                                        ui.label(
+                                            RichText::new(format!(
+                                                "Click to place · Next {}",
+                                                self.step_sequence.label(self.step_next)
+                                            ))
+                                            .color(ACCENT)
+                                            .strong(),
+                                        );
+                                    }
+                                });
                             });
                         });
                     self.canvas(ui);
@@ -701,6 +766,9 @@ fn main() -> eframe::Result {
         return Ok(());
     }
     let options = eframe::NativeOptions {
+        // Metal avoids OpenGL surface corruption observed after resizing in macOS VMs.
+        #[cfg(target_os = "macos")]
+        renderer: eframe::Renderer::Wgpu,
         viewport: ViewportBuilder::default()
             .with_inner_size([1380., 850.])
             .with_min_inner_size([1100., 700.]),

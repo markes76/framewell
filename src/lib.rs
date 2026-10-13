@@ -1,5 +1,6 @@
 //! Original Framewell document and rendering engine. No vendor implementation code.
 pub mod scrolling;
+pub mod step;
 use image::{Rgba, RgbaImage};
 use imageproc::drawing::*;
 use serde::{Deserialize, Serialize};
@@ -42,6 +43,8 @@ pub struct Object {
     pub width: f32,
     pub text: String,
     pub points: Vec<[f32; 2]>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub step: Option<step::StepStyle>,
 }
 impl Object {
     pub fn bounds(&self) -> [f32; 4] {
@@ -64,6 +67,17 @@ impl Object {
             }
             .clamp(0., 1.);
             ((p[0] - a[0] - t * dx).powi(2) + (p[1] - a[1] - t * dy).powi(2)).sqrt()
+        }
+        if self.tool == Tool::Step {
+            let [x, y, w, h] = self.bounds();
+            let dx = (p[0] - x - w / 2.).abs();
+            let dy = (p[1] - y - h / 2.).abs();
+            let r = w.min(h) / 2. + 4.;
+            return match self.step.as_ref().map(|s| s.shape).unwrap_or_default() {
+                step::StepShape::Circle => dx * dx + dy * dy <= r * r,
+                step::StepShape::Square => dx <= r && dy <= r,
+                step::StepShape::Diamond => dx + dy <= r,
+            };
         }
         if self.tool == Tool::Arrow {
             return distance(p, self.a, self.b) <= self.width / 2. + 8.;
@@ -224,6 +238,14 @@ pub fn validate(d: &Document, w: u32, h: u32) -> Result<()> {
         return Err("Too many objects".into());
     }
     for o in &d.objects {
+        if let Some(s) = &o.step
+            && (!s.border_width.is_finite()
+                || !(0.0..=12.).contains(&s.border_width)
+                || o.bounds()[2] > 160.
+                || o.bounds()[3] > 160.)
+        {
+            return Err("Invalid step marker style".into());
+        }
         if !o
             .a
             .iter()
@@ -342,7 +364,8 @@ pub fn render(source: &RgbaImage, objects: &[Object]) -> RgbaImage {
                     image::imageops::overlay(&mut img, &blur, x as i64, y as i64);
                 }
             }
-            Tool::Text | Tool::Callout | Tool::Step => {
+            Tool::Step => step::paint(&mut img, o),
+            Tool::Text | Tool::Callout => {
                 if o.tool == Tool::Callout {
                     draw_filled_rect_mut(
                         &mut img,
@@ -351,32 +374,14 @@ pub fn render(source: &RgbaImage, objects: &[Object]) -> RgbaImage {
                         c,
                     );
                 }
-                if o.tool == Tool::Step {
-                    draw_filled_circle_mut(&mut img, (x as i32 + 20, y as i32 + 20), 20, c);
-                }
                 let text_color = if o.tool == Tool::Text {
                     c
                 } else {
                     Rgba([255, 255, 255, 255])
                 };
-                let size = if o.tool == Tool::Step {
-                    25.
-                } else {
-                    o.width.max(14.)
-                };
+                let size = o.width.max(14.);
                 let f = font();
-                if o.tool == Tool::Step {
-                    let (tw, th) = text_size(size, &f, &o.text);
-                    draw_text_mut(
-                        &mut img,
-                        text_color,
-                        x as i32 + 20 - tw as i32 / 2,
-                        y as i32 + 20 - th as i32 / 2,
-                        size,
-                        &f,
-                        &o.text,
-                    );
-                } else {
+                {
                     let (rx, ry, rw, rh) = region(o, &img);
                     if rw > 16 && rh > 12 {
                         let mut patch = RgbaImage::new(rw, rh);
@@ -513,8 +518,12 @@ pub fn escape(s: &str) -> String {
 }
 pub fn export_guide(steps: &[(String, RgbaImage)], path: &Path) -> Result<()> {
     fs::create_dir_all(path)?;
+    fs::write(
+        path.join("cover.png"),
+        include_bytes!("../assets/framewell-guide-cover.png"),
+    )?;
     let mut html = String::from(
-        "<!doctype html><meta charset=utf-8><title>Framewell guide</title><style>body{font:18px system-ui;max-width:1000px;margin:60px auto;color:#1d3741}img{max-width:100%;border:1px solid #ddd;border-radius:12px}section{margin:50px 0}h1{font-size:42px}</style><h1>Visual guide</h1>",
+        r#"<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Framewell visual guide</title><style>*{box-sizing:border-box}body{font:17px/1.6 system-ui;margin:0;color:#25313b;background:#f3f6f7}main{max-width:980px;margin:32px auto;padding:0 24px}header{position:relative;min-height:300px;padding:48px 40px;background:#0a363f url('cover.png') right center/auto 100% no-repeat;color:white;border-radius:16px}header h1{font-size:42px;line-height:1.1;max-width:380px;margin:0 0 18px}header p{max-width:340px;color:#cee4e6}section{margin:28px 0;padding:30px;background:white;border-radius:12px}h2{font-size:23px;margin:0 0 22px;overflow-wrap:anywhere}section img{display:block;max-width:100%;height:auto;margin:auto}footer{padding:20px 0 40px;color:#566874}@media(max-width:650px){header{background-image:none;padding:30px 24px}header h1{font-size:32px}section{padding:20px}}@media print{body{background:white}section{break-inside:avoid}}</style><main><header><h1>Make the next step clear.</h1><p>A visual guide created with Framewell.</p></header>"#,
     );
     for (i, (caption, img)) in steps.iter().enumerate() {
         let name = format!("step-{}.png", i + 1);
@@ -527,6 +536,7 @@ pub fn export_guide(steps: &[(String, RgbaImage)], path: &Path) -> Result<()> {
             name
         );
     }
+    html += "<footer>Created with Framewell · Screenshots with context.</footer></main></html>";
     fs::write(path.join("index.html"), html)?;
     Ok(())
 }

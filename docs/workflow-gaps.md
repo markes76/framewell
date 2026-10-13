@@ -6,7 +6,7 @@ The first alpha was an engineering foundation. The 13 October workspace rebuild 
 | --- | --- | --- |
 | Capture | macOS region/window/display; guided downward scrolling of a selected area | Automatic/horizontal scrolling, capture presets, delay, cursor options and global shortcut |
 | Editor organization | Labeled tools, central canvas, visual styles, inspector tabs, recent captures | Keyboard access and native accessibility audit, richer tool preferences |
-| Annotation | Arrow, rectangle, text, rectangular callout, numbered steps, pen, highlight, blur, opaque redaction | Resize handles, multiple selection, snapping, more shapes, callout tails, fill/outline separation, stamps and saved custom styles |
+| Annotation | Arrow, rectangle, text, rectangular callout, click-placed numbered/lettered steps with editable size/shape/colors and saved step styles, pen, highlight, blur, opaque redaction | Resize handles, multiple selection, snapping, more shapes, callout tails, fill/outline separation, stamps and saved styles for other annotation tools |
 | Image manipulation | Fit-relative zoom; PNG/JPEG import and flattened PNG export | Pan, actual-scale zoom, crop, resize, rotation, effects, clipboard workflows and more export formats |
 | Library | Local editable projects, titles, thumbnail previews and title search | Tags, favorites, folders, trash/recovery, sorting, bulk operations and legacy Swift import. Paged browsing and search keep older captures accessible |
 | Guides | One persistent guide, editable captions, snapshots, reorder/remove, HTML+PNG export | Multiple named guides, templates, richer headings, PDF export and reusable layouts |
