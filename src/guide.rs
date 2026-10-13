@@ -79,7 +79,7 @@ mod tests {
     use super::*;
     #[test]
     fn saved_guide_restores_order_captions_and_pixels() {
-        let root = std::env::temp_dir().join(format!("framewell-guide-test-{}", nonce()));
+        let root = std::env::temp_dir().join(format!("framewell-guide-restore-test-{}", nonce()));
         let steps = vec![
             (
                 "First <step>".into(),
@@ -93,7 +93,7 @@ mod tests {
     }
     #[test]
     fn external_image_reference_is_rejected() {
-        let root = std::env::temp_dir().join(format!("framewell-guide-test-{}", nonce()));
+        let root = std::env::temp_dir().join(format!("framewell-guide-traversal-test-{}", nonce()));
         fs::create_dir_all(&root).unwrap();
         fs::write(
             root.join("guide.json"),
