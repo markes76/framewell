@@ -45,7 +45,7 @@ impl Framewell {
                 }
                 if let Some(area)=preview.area {
                     let mark=Rect::from_min_max(r.min+area.min.to_vec2()*scale,r.min+area.max.to_vec2()*scale);
-                    ui.painter().rect_stroke(mark,0,Stroke::new(2.,ACCENT),StrokeKind::Inside);
+                    ui.painter().rect_stroke(mark,0,Stroke::new(2.0_f32,ACCENT),StrokeKind::Inside);
                     ui.label(format!("Selected {:.0} × {:.0} pixels",area.width(),area.height()));
                 } else { ui.label("Select an area in the image above."); }
                 if !preview.error.is_empty() { ui.label(RichText::new(&preview.error).strong().color(INK)); }

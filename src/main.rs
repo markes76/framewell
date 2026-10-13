@@ -108,7 +108,7 @@ impl Framewell {
         style.visuals.override_text_color = Some(INK);
         style.visuals.panel_fill = Color32::from_rgb(249, 250, 251);
         style.visuals.widgets.inactive.bg_fill = Color32::WHITE;
-        style.visuals.widgets.inactive.bg_stroke = Stroke::new(1., BORDER);
+        style.visuals.widgets.inactive.bg_stroke = Stroke::new(1.0_f32, BORDER);
         style.visuals.widgets.hovered.bg_fill = TINT;
         style.visuals.widgets.active.bg_fill = TINT;
         style.spacing.button_padding = vec2(12., 8.);
@@ -568,11 +568,11 @@ impl eframe::App for Framewell {
             style.visuals.weak_text_color = Some(MUTED);
             style.visuals.selection = egui::style::Selection {
                 bg_fill: TINT,
-                stroke: Stroke::new(1., ACCENT),
+                stroke: Stroke::new(1.0_f32, ACCENT),
             };
-            style.visuals.widgets.inactive.fg_stroke = Stroke::new(1., INK);
-            style.visuals.widgets.hovered.fg_stroke = Stroke::new(1., INK);
-            style.visuals.widgets.active.fg_stroke = Stroke::new(1., ACCENT);
+            style.visuals.widgets.inactive.fg_stroke = Stroke::new(1.0_f32, INK);
+            style.visuals.widgets.hovered.fg_stroke = Stroke::new(1.0_f32, INK);
+            style.visuals.widgets.active.fg_stroke = Stroke::new(1.0_f32, ACCENT);
         });
         if ctx.input(|i| i.viewport().close_requested())
             && !self.allow_close

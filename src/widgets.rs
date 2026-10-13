@@ -66,11 +66,11 @@ pub fn icon(p: &Painter, r: Rect, tool: Tool, color: Color32, width: f32) {
         Tool::Highlight => {
             p.line_segment(
                 [pos2(a.x, b.y - 3.), pos2(b.x, b.y - 3.)],
-                Stroke::new(7., color.gamma_multiply(0.35)),
+                Stroke::new(7.0_f32, color.gamma_multiply(0.35)),
             );
             p.line_segment(
                 [pos2(a.x + 3., b.y - 7.), pos2(b.x - 3., a.y + 2.)],
-                Stroke::new(5., color),
+                Stroke::new(5.0_f32, color),
             );
         }
         Tool::Redact => {
@@ -137,7 +137,7 @@ pub fn tool_button(ui: &mut Ui, tool: Tool, active: bool) -> Response {
     }
     if response.has_focus() {
         ui.painter()
-            .rect_stroke(r, 6, Stroke::new(1., ACCENT), StrokeKind::Inside);
+            .rect_stroke(r, 6, Stroke::new(1.0_f32, ACCENT), StrokeKind::Inside);
     }
     icon(
         ui.painter(),
@@ -176,7 +176,7 @@ pub fn style_button(
         r,
         5,
         Stroke::new(
-            if active { 2. } else { 1. },
+            if active { 2.0_f32 } else { 1.0_f32 },
             if active { ACCENT } else { BORDER },
         ),
         StrokeKind::Inside,
@@ -207,7 +207,7 @@ pub fn image_tile(
         r,
         5,
         Stroke::new(
-            if active { 2. } else { 1. },
+            if active { 2.0_f32 } else { 1.0_f32 },
             if active { ACCENT } else { BORDER },
         ),
         StrokeKind::Inside,
