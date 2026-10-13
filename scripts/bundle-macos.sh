@@ -15,11 +15,16 @@ cat > "$bundle/Contents/Info.plist" <<'PLIST'
 <key>CFBundleExecutable</key><string>FramewellRust</string>
 <key>CFBundlePackageType</key><string>APPL</string>
 <key>CFBundleShortVersionString</key><string>0.1.0</string>
-<key>CFBundleVersion</key><string>2</string>
+<key>CFBundleVersion</key><string>3</string>
 <key>LSMinimumSystemVersion</key><string>15.0</string>
 <key>NSHighResolutionCapable</key><true/>
 <key>NSScreenCaptureUsageDescription</key><string>Capture the region, window or display you choose to explain.</string>
 </dict></plist>
 PLIST
-codesign --force --sign - "$bundle"
-echo "Built $bundle (development signature; not notarized)"
+signing_identity=${FRAMEWELL_SIGN_IDENTITY:--}
+codesign --force --sign "$signing_identity" "$bundle"
+if [ "$signing_identity" = '-' ]; then
+    echo "Built $bundle (ad hoc; capture permission must be renewed after each changed build)"
+else
+    echo "Built $bundle (certificate signed; retain the same identity across updates)"
+fi

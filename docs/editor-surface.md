@@ -18,4 +18,4 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
 
 ## Boundaries
 
-This iteration improves the workspace and durable guide workflow. It does not establish Snagit feature parity. Scrolling, OCR, crop/resize handles, stamps, richer effects, JEV and OpenAI image generation remain release gates. Preserve the independent Swift installation and library.
+This iteration improves the workspace and durable guide workflow. It does not establish Snagit feature parity. Guided vertical scrolling extends the capture selector with a preview, an explicit selection and floating Finish/Cancel controls. Automatic/horizontal scrolling, OCR, crop/resize handles, stamps, richer effects, JEV and OpenAI image generation remain release gates. Preserve the independent Swift installation and library.

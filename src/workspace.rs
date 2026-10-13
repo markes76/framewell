@@ -206,7 +206,7 @@ impl Framewell {
                                     .width(88.)
                                     .selected_text(&self.capture_mode)
                                     .show_ui(ui, |ui| {
-                                        for mode in ["Region", "Window", "Display"] {
+                                        for mode in ["Region", "Window", "Display", "Scrolling"] {
                                             ui.selectable_value(
                                                 &mut self.capture_mode,
                                                 mode.into(),

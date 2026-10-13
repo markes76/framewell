@@ -164,7 +164,7 @@ All measurements here use egui logical points, independent of screenshot pixel d
 
 The normal inner viewport is (1380 × 850 points), with a minimum of (1100 × 700 points). Native window chrome is outside these inner dimensions. No mobile breakpoint or compact alternate workspace is implemented.
 
-The shared top header uses horizontal margins (16 points) and vertical margins (10 points), with equally aligned controls (34 points). Workspace tabs have a minimum width (72 points); Capture has a minimum width (92 points). The Region/Window/Display selector participates in the same header interaction height and has a configured width (88 points).
+The shared top header uses horizontal margins (16 points) and vertical margins (10 points), with equally aligned controls (34 points). Workspace tabs have a minimum width (72 points); Capture has a minimum width (92 points). The Region/Window/Display/Scrolling selector participates in the same header interaction height and has a configured width (88 points).
 
 The Editor adds a shelf of tool controls (66 points tall each), with top/bottom shelf padding (5 points) and gaps (4 points). The right inspector is fixed and non-resizable (286 points), with internal margins (14 points), tabs, and an always-visible vertical scrollbar. The central image is fitted and centered in the remaining canvas. The recent strip is fixed (142 points), horizontally scrollable, and contains the current capture followed by up to 24 recent saved captures. Status and fit/zoom controls sit below it.
 
@@ -186,7 +186,19 @@ Tools and guide cards use gently curved corners; Quick Styles and image tiles us
 
 ### Buttons and navigation
 
-Capture is the filled teal primary action with white text. Import, Save, Export, and the workspace tabs use egui buttons with the shared typography, padding, and header control height. Selected tabs use the common selection treatment. The capture selector exposes Region, Window, and Display. Inspector navigation uses selectable labels for Properties, Layers, and AI. Native framework hover/focus and disabled responses apply except where custom controls explicitly paint their own state.
+Capture is the filled teal primary action with white text. Import, Save, Export, and the workspace tabs use egui buttons with the shared typography, padding, and header control height. Selected tabs use the common selection treatment. The capture selector exposes Region, Window, Display, and Scrolling. Inspector navigation uses selectable labels for Properties, Layers, and AI. Native framework hover/focus and disabled responses apply except where custom controls explicitly paint their own state.
+
+### Capture permission and guided scrolling
+
+Capture checks macOS screen-recording permission before hiding the editor. Missing permission presents recovery guidance in the status area: enable the installed Framewell Rust app in Privacy & Security → Screen & System Audio Recording, then quit and reopen once. Permission denial, capture failure, and user cancellation are distinct outcomes; cancellation does not present a permission error or replace the current image.
+
+Scrolling is guided manual downward capture on the primary display. Its native egui modal places a display preview beneath a heading and two short instruction lines. Drag inside the preview to select scrolling content, excluding fixed headers, borders, and scrollbars. A square teal outline marks the selection; the selected pixel dimensions appear below it. Start scrolling capture remains disabled until both selected dimensions reach (32 pixels). Cancel, Escape, and a backdrop click dismiss the preview through the modal close response. The editor's Escape action is guarded while this preview is open.
+
+The preview fits within the viewport with an available width capped at (900 points) and height based on the viewport minus (230 points), with a (220-point) floor. These are local component constraints, not new system tokens. The minimum-size evidence shows the instructions, preview, disabled Start, and Cancel together inside the modal; its dimmed backdrop protects the editor beneath it.
+
+Starting hides the editor and opens a non-resizable, always-on-top native control window (380 × 120 points). It shows a frame count, progress or recovery copy, Finish, and Cancel. Placement prefers the bottom-left then bottom-right display corner, with top corners as fallbacks, and keeps the controls outside the selected area. If none fits, the preview asks for a smaller selection. The user scrolls the real window slowly, retaining at least 20% overlap; frames are sampled with an (850-millisecond) pause between capture iterations. Finish returns the stitched image to Editor with a prompt to review its joins before sharing. Cancel, closing the controls, or capture failure retains the prior image.
+
+This bounded extension stops at 80 accepted frames or 120 seconds; output is limited to 40 million pixels and 16,000 pixels per dimension. It does not establish automatic scrolling, horizontal scrolling, sticky-content handling, other display configurations, or Snagit parity. The existing palette, type hierarchy, compact native controls, and canvas-led editor remain its visual authority.
 
 ### Labeled vector tools
 
@@ -215,11 +227,16 @@ Recent and Library tiles use the same thumbnail-and-caption form at their frontm
 - Do retain real image thumbnails, title search across the full library, and pagination.
 - Do load the installed macOS font at runtime and retain the egui proportional fallback.
 - Do share the palette and spacing grammar across Editor, Library, and Guides.
+- Do keep scrolling selection protected by the native modal, place Finish/Cancel outside the selected content, and return the result to the editor for join review.
+- Do distinguish capture permission recovery from cancellation and capture failure; retain the prior image on cancellation or failure.
 
 ### Don't:
 - Don't replace the visual library with a cramped filename sidebar.
 - Don't redistribute Apple font files.
-- Don't describe scrolling capture, OCR, crop/resize handles, stamps, richer effects, JEV, image generation, or video timeline editing as shipped features.
+- Don't describe automatic or horizontal scrolling, OCR, crop/resize handles, stamps, richer effects, JEV, OpenAI image generation/editing, or video timeline editing as shipped features.
+- Don't infer production signing or notarization from the VM's persistent local development certificate; public development bundles remain self-signed and unnotarized.
 - Don't treat resemblance to the reference as evidence of feature parity.
 
 Evidence: `src/widgets.rs` defines the palette, vector controls, style previews, tile dimensions and state painting; `src/main.rs` defines runtime fonts, shared egui style, canvas treatment and viewport limits; `src/workspace.rs` defines headers, panel dimensions, full-library filtering/pagination, properties, AI review, and guide cards. `.impeccable/review/editor-desktop.png` and `editor-minimum.png` confirm the editor composition and minimum-width Callout-text placement. `PRODUCT.md` and `docs/editor-surface.md` establish the user-pinned reference and truthful prototype boundaries. Missing features are release gaps, not new visual rules.
+
+Capture-extension evidence: `src/scroll_ui.rs` defines the native preview modal, modal close handling, selection outline, local sizing and external Finish/Cancel controls; `src/platform.rs` distinguishes permission, cancellation and capture failure; `src/main.rs` guards editor Escape during the preview and preserves the previous image on cancelled/failed scrolling; `src/scrolling.rs` bounds the stitched output. `.impeccable/review/scrolling-result.png` confirms the normal editor, Scrolling selector, stitched synthetic content and unchanged-image cancellation status. Private `scroll-minimum.png` and `scroll-controls.png` under `/Users/mbp-private/Downloads/framewell-capture-review/` were inspected for minimum-size modal fit and controls outside the content; they remain outside the public repository. `docs/verification.md` records VM capture and cancellation tests, signing continuity and remaining coverage limits. The screenshots corroborate composition, not every cancellation path or production readiness. No new system tokens are introduced; frontmatter and `.impeccable/design.json` retain the incumbent values.

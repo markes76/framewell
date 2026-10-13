@@ -6,4 +6,4 @@ The user rejected the first alpha's cramped controls and filename library. The c
 
 Platform: macOS desktop, Rust / eframe. Scene: colleagues explaining software at a desk. Documents stay local; an explicit AI request sends the rendered image through the existing Codex login. JEV and OpenAI image generation integration remain planned for this rebuild. Preserve the separate Swift app and its library.
 
-Priority: large canvas, labeled annotation tools, visual Quick Styles, contextual properties, actual capture thumbnails, and a dedicated guide workspace. Missing scrolling capture, OCR, richer effects, stamps, and image generation must remain accurately documented.
+Priority: large canvas, labeled annotation tools, visual Quick Styles, contextual properties, actual capture thumbnails, and a dedicated guide workspace. Guided manual vertical scrolling capture is implemented on the primary display. Automatic and horizontal scrolling, OCR, richer effects, stamps, and image generation remain pending and must remain accurately documented.

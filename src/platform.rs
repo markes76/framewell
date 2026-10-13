@@ -5,12 +5,15 @@ use std::{
     thread,
     time::{Duration, Instant},
 };
-pub fn capture(mode: &str) -> Result<PathBuf> {
+pub fn capture(mode: &str) -> Result<Option<PathBuf>> {
     if !cfg!(target_os = "macos") {
         return Err(
             "Capture is currently supported on macOS. Import remains available on other platforms."
                 .into(),
         );
+    }
+    if !capture_permission_granted() {
+        return Err(permission_message().into());
     }
     let p = std::env::temp_dir().join(format!("framewell-capture-{}.png", nonce()));
     let mut cmd = Command::new("/usr/sbin/screencapture");
@@ -26,11 +29,179 @@ pub fn capture(mode: &str) -> Result<PathBuf> {
             cmd.arg("-i");
         }
     }
-    let status = cmd.arg(&p).status()?;
-    if !status.success() || !p.exists() {
-        return Err("Capture cancelled or denied. Enable Screen Recording for Framewell Rust in System Settings.".into());
+    let output = cmd.arg(&p).output()?;
+    let diagnostic = String::from_utf8_lossy(&output.stderr);
+    let result = classify_capture(
+        capture_permission_granted(),
+        p.is_file(),
+        &diagnostic,
+        output.status.success(),
+    );
+    match result {
+        Ok(Some(())) => Ok(Some(p)),
+        Ok(None) => Ok(None),
+        Err(e) => {
+            let _ = std::fs::remove_file(p);
+            Err(e)
+        }
     }
-    Ok(p)
+}
+
+#[cfg(test)]
+mod capture_tests {
+    use super::*;
+    #[test]
+    fn cancelling_with_permission_preserves_image_without_a_permission_error() {
+        assert!(classify_capture(true, false, "", true).unwrap().is_none());
+    }
+    #[test]
+    fn capture_permission_and_real_failures_have_distinct_recovery() {
+        assert!(
+            classify_capture(false, false, "", false)
+                .unwrap_err()
+                .to_string()
+                .contains("permission")
+        );
+        assert!(
+            classify_capture(true, false, "could not create image from window", false)
+                .unwrap_err()
+                .to_string()
+                .contains("could not create")
+        );
+        assert_eq!(classify_capture(true, true, "", true).unwrap(), Some(()));
+    }
+    #[test]
+    fn preview_selection_uses_screenshot_pixels_on_a_scaled_display() {
+        assert_eq!(
+            preview_capture_region(
+                [320., 148., 600., 350.],
+                [0., 0., 1728., 972.],
+                [2560, 1440]
+            ),
+            [320., 148., 600., 350.]
+        );
+    }
+}
+// screencapture -R takes screenshot pixels, not CoreGraphics display points.
+pub fn preview_capture_region(area: [f32; 4], bounds: [f64; 4], _image: [u32; 2]) -> [f64; 4] {
+    [
+        bounds[0] + f64::from(area[0]),
+        bounds[1] + f64::from(area[1]),
+        f64::from(area[2]),
+        f64::from(area[3]),
+    ]
+}
+
+fn classify_capture(
+    permission: bool,
+    file: bool,
+    diagnostic: &str,
+    success: bool,
+) -> Result<Option<()>> {
+    if !permission {
+        return Err(permission_message().into());
+    }
+    if success && file {
+        return Ok(Some(()));
+    }
+    if !file && diagnostic.trim().is_empty() {
+        return Ok(None);
+    }
+    Err(format!(
+        "Capture failed: {}. Try selecting another window or a region.",
+        diagnostic.trim().chars().take(400).collect::<String>()
+    )
+    .into())
+}
+
+fn permission_message() -> &'static str {
+    "Capture permission is unavailable. Enable the installed Framewell Rust app in Privacy & Security → Screen & System Audio Recording, then quit and reopen Framewell once."
+}
+#[cfg(target_os = "macos")]
+#[link(name = "CoreGraphics", kind = "framework")]
+unsafe extern "C" {
+    fn CGPreflightScreenCaptureAccess() -> bool;
+    fn CGRequestScreenCaptureAccess() -> bool;
+    fn CGMainDisplayID() -> u32;
+    fn CGDisplayBounds(display: u32) -> DisplayRect;
+}
+#[repr(C)]
+struct Point {
+    x: f64,
+    y: f64,
+}
+#[repr(C)]
+struct Size {
+    width: f64,
+    height: f64,
+}
+#[repr(C)]
+struct DisplayRect {
+    origin: Point,
+    size: Size,
+}
+pub fn primary_display_bounds() -> Result<[f64; 4]> {
+    #[cfg(target_os = "macos")]
+    {
+        let r = unsafe { CGDisplayBounds(CGMainDisplayID()) };
+        Ok([r.origin.x, r.origin.y, r.size.width, r.size.height])
+    }
+    #[cfg(not(target_os = "macos"))]
+    {
+        Err("Scrolling capture is currently available on macOS.".into())
+    }
+}
+pub fn capture_region(region: [f64; 4]) -> Result<PathBuf> {
+    if !capture_permission_granted() {
+        return Err(permission_message().into());
+    }
+    if region.iter().any(|v| !v.is_finite()) || region[2] < 16. || region[3] < 16. {
+        return Err("Choose a larger scrolling area.".into());
+    }
+    let path = std::env::temp_dir().join(format!("framewell-scroll-{}.png", nonce()));
+    let output = Command::new("/usr/sbin/screencapture")
+        .args(["-x", "-R"])
+        .arg(format!(
+            "{:.0},{:.0},{:.0},{:.0}",
+            region[0], region[1], region[2], region[3]
+        ))
+        .arg(&path)
+        .output()?;
+    if !output.status.success() || !path.is_file() {
+        let _ = std::fs::remove_file(&path);
+        return Err(format!(
+            "Scrolling capture failed: {}",
+            String::from_utf8_lossy(&output.stderr).trim()
+        )
+        .into());
+    }
+    Ok(path)
+}
+pub fn capture_permission_granted() -> bool {
+    #[cfg(target_os = "macos")]
+    {
+        unsafe { CGPreflightScreenCaptureAccess() }
+    }
+    #[cfg(not(target_os = "macos"))]
+    {
+        false
+    }
+}
+pub fn ensure_capture_permission() -> Result<()> {
+    if !cfg!(target_os = "macos") {
+        return Err(
+            "Native capture is currently available on macOS. Import an image on this platform."
+                .into(),
+        );
+    }
+    if capture_permission_granted() {
+        return Ok(());
+    }
+    #[cfg(target_os = "macos")]
+    if unsafe { CGRequestScreenCaptureAccess() } {
+        return Ok(());
+    }
+    Err(permission_message().into())
 }
 pub fn explain(image: PathBuf, focus: String) -> Result<String> {
     // Use the user's own Codex login; never read or copy account tokens.

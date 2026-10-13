@@ -1,4 +1,5 @@
 //! Original Framewell document and rendering engine. No vendor implementation code.
+pub mod scrolling;
 use image::{Rgba, RgbaImage};
 use imageproc::drawing::*;
 use serde::{Deserialize, Serialize};

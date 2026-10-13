@@ -1,5 +1,18 @@
 # Verification — 13 October 2026
 
+## Capture repair and guided scrolling
+
+- Host: 22 tests passed (five stitching tests, three capture outcome/geometry tests, one delayed-drag regression, two guide tests and eleven document tests); Clippy passed with warnings denied.
+- VM macOS 27.0.1: TCC logs showed the installed ad hoc binary no longer matched the code requirement stored with its permission grant. A persistent local development certificate replaced that changing identity. The user unlocked Privacy & Security directly, granted access, and the app was restarted once.
+- VM: window capture of original synthetic TextEdit content, region capture (409 × 241) and display capture (2560 × 1440) succeeded. Repeated builds signed by the same certificate captured without repeating the Settings loop.
+- `verify-signing-continuity.sh` passed in the VM: changing the copied bundle version and re-signing preserved its certificate-based designated requirement. This proves local identity continuity, not production notarization.
+- VM final build: selected scrolling content and stitched four frames to 646 × 535 pixels. Numbered rows 001–020 remain in order, with no duplicate rows or missing prefix. The editor returned on Finish, and local save succeeded. Preview button/Escape cancellation, active scrolling cancellation and Escape cancellation of window capture kept that saved image and did not produce a permission error.
+- Final fix batch: scrolling preview honors native modal Escape/backdrop dismissal; editor Escape handling is suppressed while the preview is open. Live Escape retained the saved 646 × 535 image and selected Pen tool.
+- The delayed-drag regression fixes both scrolling selection and annotation starts: the initial press position is retained even when the first drag frame arrives after pointer movement.
+- Normal and minimum-size scrolling UI were inspected. Floating controls appeared outside the capture area, away from notification banners. The public result screenshot contains only app UI and original synthetic text; desktop preview/controls evidence remains private outside the repository.
+- Independent finish review identified preview Escape behavior and stale capture documentation. Both were corrected in one batch; its final `ship` verdict scores those two fixes resolved, without claiming whole-app accessibility or Snagit parity.
+- Guided capture is primary-display, downward manual scrolling only; matching rejects incompatible dimensions, gaps and ambiguous low-detail changes. Limits: 80 frames, 120 seconds, 16,000 pixels per dimension and 40 million output pixels. Automatic scrolling, sticky-content handling and other display configurations remain unverified.
+
 ## Workspace rebuild
 
 - Original canvas-led editor with labeled vector tools, visual Quick Styles, contextual Properties/Layers/AI tabs, recent captures, visual Library and dedicated Guides.
@@ -26,11 +39,11 @@
 
 ## Pending and limitations
 
-- Native region capture is implemented; its live test reached the macOS Screen Recording gate. The user must authenticate in System Settings directly in the VM. Successful region/window/display captures remain unverified until that permission is granted.
+- Region/window/display and guided scrolling have now passed live VM tests. Broader physical display, multi-monitor and real-world app coverage remain pending.
 - The current guide saves explicitly and restores at startup. Multiple named guides, templates and richer exports remain pending.
 - Existing Swift documents and library are untouched and not migrated yet.
-- Current build uses development signing; signing/notarization and automatic permission retention across rebuilds are not production-ready.
-- Full manipulation, crop/resize, scrolling, stamps, OCR, JEV decisions and OpenAI pixel generation/editing remain roadmap items. Hebrew/RTL shaping, accessibility and other operating systems have not been verified.
+- Current VM build uses a persistent local development certificate. Public development bundles are self-signed and unnotarized; Apple Developer ID distribution remains pending.
+- Full manipulation, crop/resize, automatic/horizontal scrolling, stamps, OCR, JEV decisions and OpenAI pixel generation/editing remain roadmap items. Hebrew/RTL shaping, accessibility and other operating systems have not been verified.
 - Only the independent new source tree is intended for public publication. No private screenshots, original project library, commercial binaries, decompiled code or credentials are included.
 
 ## Snagit/REA evidence

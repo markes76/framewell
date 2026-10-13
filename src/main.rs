@@ -1,5 +1,6 @@
 mod guide;
 mod platform;
+mod scroll_ui;
 mod widgets;
 mod workspace;
 use eframe::egui::{self, *};
@@ -43,6 +44,8 @@ struct Framewell {
     capture_mode: String,
     zoom: f32,
     style_editing: bool,
+    scroll_preview: Option<scroll_ui::ScrollPreview>,
+    scroll_run: Option<scroll_ui::ScrollRun>,
 }
 #[derive(Clone, Copy, PartialEq)]
 enum Workspace {
@@ -69,8 +72,10 @@ struct LibraryItem {
     texture: Option<TextureHandle>,
 }
 enum Job {
-    Capture(std::result::Result<PathBuf, String>),
+    Capture(std::result::Result<Option<PathBuf>, String>),
     AI(u64, std::result::Result<String, String>),
+    ScrollPreview(std::result::Result<Option<PathBuf>, String>),
+    Scrolling(std::result::Result<Option<image::RgbaImage>, String>),
 }
 impl Framewell {
     fn new(cc: &eframe::CreationContext<'_>) -> Self {
@@ -152,6 +157,8 @@ impl Framewell {
             capture_mode: "Region".into(),
             zoom: 1.,
             style_editing: false,
+            scroll_preview: None,
+            scroll_run: None,
         };
         s.editor.state.document.title = "Example capture (synthetic)".into();
         s.refresh_library();
@@ -250,6 +257,10 @@ impl Framewell {
         if self.job.is_some() {
             return;
         }
+        if let Err(e) = platform::ensure_capture_permission() {
+            self.status = e.to_string();
+            return;
+        }
         let (tx, rx) = mpsc::channel();
         self.job = Some(rx);
         self.status = "Choose your capture. Escape cancels.".into();
@@ -257,9 +268,17 @@ impl Framewell {
         let mode = self.capture_mode.clone();
         std::thread::spawn(move || {
             std::thread::sleep(Duration::from_millis(400));
-            let _ = tx.send(Job::Capture(
-                platform::capture(&mode).map_err(|e| e.to_string()),
-            ));
+            let result = platform::capture(if mode == "Scrolling" {
+                "Display"
+            } else {
+                &mode
+            })
+            .map_err(|e| e.to_string());
+            let _ = tx.send(if mode == "Scrolling" {
+                Job::ScrollPreview(result)
+            } else {
+                Job::Capture(result)
+            });
         });
     }
     fn start_ai(&mut self) {
@@ -290,7 +309,60 @@ impl Framewell {
             ctx.send_viewport_cmd(ViewportCommand::Visible(true));
             ctx.send_viewport_cmd(ViewportCommand::Focus);
             match result {
-                Job::Capture(Ok(p)) => {
+                Job::ScrollPreview(result) => match result {
+                    Ok(Some(path)) => {
+                        let loaded = load_image(&path);
+                        let _ = std::fs::remove_file(path);
+                        match (loaded, platform::primary_display_bounds()) {
+                            (Ok(image), Ok(bounds)) => {
+                                let texture = ctx.load_texture(
+                                    "scrolling selection",
+                                    ColorImage::from_rgba_unmultiplied(
+                                        [image.width() as usize, image.height() as usize],
+                                        image.as_raw(),
+                                    ),
+                                    TextureOptions::LINEAR,
+                                );
+                                self.scroll_preview = Some(scroll_ui::ScrollPreview {
+                                    image,
+                                    texture,
+                                    bounds,
+                                    start: None,
+                                    area: None,
+                                    error: String::new(),
+                                });
+                            }
+                            (Err(e), _) | (_, Err(e)) => self.status = e.to_string(),
+                        }
+                    }
+                    Ok(None) => {
+                        self.status = "Scrolling capture cancelled. Your image is unchanged.".into()
+                    }
+                    Err(e) => self.status = e,
+                },
+                Job::Scrolling(result) => {
+                    self.scroll_run = None;
+                    match result {
+                        Ok(Some(image)) => {
+                            self.replace_editor(Editor::new(image));
+                            self.editor.state.document.title = "Scrolling capture".into();
+                            self.modified = true;
+                            self.workspace = Workspace::Editor;
+                            self.status =
+                                "Scrolling capture ready. Review the joins before sharing.".into();
+                        }
+                        Ok(None) => {
+                            self.status =
+                                "Scrolling capture cancelled. Your image is unchanged.".into()
+                        }
+                        Err(e) => {
+                            self.status = format!(
+                                "Scrolling capture stopped: {e} Your previous image is unchanged."
+                            )
+                        }
+                    }
+                }
+                Job::Capture(Ok(Some(p))) => {
                     match load_image(&p) {
                         Ok(img) => {
                             self.replace_editor(Editor::new(img));
@@ -305,6 +377,9 @@ impl Framewell {
                     let _ = std::fs::remove_file(p);
                 }
                 Job::Capture(Err(e)) => self.status = e,
+                Job::Capture(Ok(None)) => {
+                    self.status = "Capture cancelled. Your image is unchanged.".into()
+                }
                 Job::AI(revision, result) => {
                     if revision != self.editor.revision {
                         self.status =
@@ -415,7 +490,7 @@ impl Framewell {
             self.sync_selection();
         }
         if response.drag_started()
-            && let Some(p) = response.interact_pointer_pos()
+            && let Some(p) = drag_press_origin(ui, &response)
         {
             let p = point(p);
             if self.tool == Tool::Select {
@@ -525,7 +600,7 @@ impl eframe::App for Framewell {
                 self.save();
             }
         }
-        if !ctx.wants_keyboard_input() {
+        if self.scroll_preview.is_none() && !ctx.wants_keyboard_input() {
             if ctx.input(|i| i.key_pressed(Key::Escape)) {
                 self.selected = None;
                 self.tool = Tool::Select;
@@ -611,6 +686,7 @@ impl eframe::App for Framewell {
                     });
                 });
         }
+        self.scrolling_ui(ctx);
     }
 }
 fn main() -> eframe::Result {

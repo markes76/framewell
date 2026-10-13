@@ -242,3 +242,51 @@ pub fn section(ui: &mut Ui, title: &str) {
     ui.label(RichText::new(title).size(15.).strong().color(INK));
     ui.add_space(5.);
 }
+pub fn drag_press_origin(ui: &Ui, response: &Response) -> Option<Pos2> {
+    ui.input(|i| i.pointer.press_origin())
+        .or_else(|| response.interact_pointer_pos())
+}
+#[cfg(test)]
+mod drag_tests {
+    use super::*;
+    #[test]
+    fn delayed_drag_frame_keeps_the_initial_press_point() {
+        let ctx = Context::default();
+        let screen = Some(Rect::from_min_size(Pos2::ZERO, vec2(600., 500.)));
+        let _ = ctx.run(
+            RawInput {
+                screen_rect: screen,
+                ..Default::default()
+            },
+            |ctx| {
+                CentralPanel::default().show(ctx, |ui| {
+                    ui.allocate_exact_size(vec2(500., 400.), Sense::click_and_drag());
+                });
+            },
+        );
+        let mut start = None;
+        let _ = ctx.run(
+            RawInput {
+                screen_rect: screen,
+                events: vec![
+                    Event::PointerMoved(pos2(100., 100.)),
+                    Event::PointerButton {
+                        pos: pos2(100., 100.),
+                        button: PointerButton::Primary,
+                        pressed: true,
+                        modifiers: Modifiers::NONE,
+                    },
+                    Event::PointerMoved(pos2(300., 200.)),
+                ],
+                ..Default::default()
+            },
+            |ctx| {
+                CentralPanel::default().show(ctx, |ui| {
+                    let (_, r) = ui.allocate_exact_size(vec2(500., 400.), Sense::click_and_drag());
+                    start = drag_press_origin(ui, &r);
+                });
+            },
+        );
+        assert_eq!(start, Some(pos2(100., 100.)));
+    }
+}

@@ -421,7 +421,7 @@
     "donts": [
       "Don't replace the visual library with a cramped filename sidebar.",
       "Don't redistribute Apple font files.",
-      "Don't describe scrolling capture, OCR, crop/resize handles, stamps, richer effects, JEV, image generation, or video timeline editing as shipped features.",
+      "Guided manual downward scrolling capture on the primary display is implemented; don't describe automatic or horizontal scrolling, OCR, crop/resize handles, stamps, richer effects, JEV, OpenAI image generation/editing, or video timeline editing as shipped features.",
       "Don't treat resemblance to the reference as evidence of feature parity."
     ]
   }
