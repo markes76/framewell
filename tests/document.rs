@@ -48,7 +48,7 @@ fn save_reopen_preserves_objects_and_source() {
     let mut e = Editor::new(sample());
     e.add(object(Tool::Callout));
     e.state.document.caption = "Explain the control".into();
-    let p = std::env::temp_dir().join(format!("framewell-test-{}", nonce()));
+    let p = std::env::temp_dir().join(format!("framewell-restore-test-{}", nonce()));
     e.save(&p).unwrap();
     let restored = Editor::open(&p).unwrap();
     assert_eq!(restored.state.document.objects[0].text, "Secret");
@@ -67,7 +67,7 @@ fn invalid_geometry_is_rejected() {
 }
 #[test]
 fn project_asset_traversal_is_rejected() {
-    let p = std::env::temp_dir().join(format!("framewell-test-{}", nonce()));
+    let p = std::env::temp_dir().join(format!("framewell-traversal-test-{}", nonce()));
     std::fs::create_dir(&p).unwrap();
     let v = serde_json::json!({"document":Document::default(),"source":"../source-secret.png"});
     std::fs::write(p.join("document.json"), v.to_string()).unwrap();
@@ -80,7 +80,7 @@ fn unsupported_project_version_is_rejected() {
         version: 10,
         ..Document::default()
     };
-    let p = std::env::temp_dir().join(format!("framewell-test-{}", nonce()));
+    let p = std::env::temp_dir().join(format!("framewell-version-test-{}", nonce()));
     std::fs::create_dir(&p).unwrap();
     std::fs::write(
         p.join("document.json"),
@@ -92,7 +92,7 @@ fn unsupported_project_version_is_rejected() {
 }
 #[test]
 fn guide_html_cannot_execute_caption() {
-    let p = std::env::temp_dir().join(format!("framewell-test-{}", nonce()));
+    let p = std::env::temp_dir().join(format!("framewell-html-test-{}", nonce()));
     export_guide(&[("<script>alert(1)</script>".into(), sample())], &p).unwrap();
     let html = std::fs::read_to_string(p.join("index.html")).unwrap();
     assert!(!html.contains("<script>"));
